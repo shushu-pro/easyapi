@@ -10,8 +10,6 @@ import nodeGlobals from 'rollup-plugin-node-globals'
 import replace from '@rollup/plugin-replace'
 import livereload from 'rollup-plugin-livereload' // 热更新;
 
-import external from './external'
-
 export default {
   input: './playground/index.js', // 入口文件
   output: { // 出口文件
@@ -19,6 +17,9 @@ export default {
     format: 'iife',
     name: 'playground',
     sourcemap: true,
+    globals: {
+      axios: 'axiosLib',
+    },
   },
   plugins: [
     replace({
@@ -30,6 +31,7 @@ export default {
       customResolveOptions: {
         moduleDirectory: 'node_modules',
       },
+      browser: true,
     }),
     // babel({
     //     presets: [
@@ -58,6 +60,12 @@ export default {
       host: 'localhost', // 设置服务器;
       port: 8000, // 端口号;
       beforeResponse ({ request, response, content, error }) {
+        if (/^\/api\/.+/.test(request.url)) {
+          setTimeout(() => {
+            response.end(' ukkkkkki')
+          }, 1000)
+          return false
+        }
         // response.end('xxx')
         // return false
       },
@@ -66,5 +74,4 @@ export default {
       watch: [ './playground/', './temp/' ], // 监听文件夹
     }),
   ],
-  external,
 }

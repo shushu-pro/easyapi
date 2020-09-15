@@ -40,6 +40,7 @@ export default {
       customResolveOptions: {
         moduleDirectory: 'node_modules',
       },
+      browser: true,
     }),
     // babel({
     //     presets: [

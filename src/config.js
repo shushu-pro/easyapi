@@ -1,5 +1,6 @@
 const axiosDefaults = {
   method: 'GET',
+  responseType: 'json',
 }
 
 const easyapiDefaults = {
@@ -9,6 +10,6 @@ const easyapiDefaults = {
 }
 
 export default {
-  ...axiosDefaults,
-  ...easyapiDefaults,
+  axios: axiosDefaults,
+  easyapi: easyapiDefaults,
 }

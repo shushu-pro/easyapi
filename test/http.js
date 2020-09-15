@@ -31,7 +31,6 @@ export default {
 }
 
 function start () {
-  easyapi.defaults.baseURL = 'http://localhost:4444/'
   server.listen(4444)
 }
 
@@ -40,10 +39,16 @@ function close () {
 }
 
 function create (code, option) {
+  if (option === undefined) {
+    option = code
+    code = 200
+  }
   return easyapi({
+    baseURL: 'http://localhost:4444/',
     ...option,
     configs: {
       test: { url: `?cmd=http${code}`, ...option.config },
+      ...option.configs,
     },
   })
 }

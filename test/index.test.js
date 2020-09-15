@@ -1,6 +1,14 @@
 import ijest from 'ijest'
+import adapter from '@shushu.pro/adapter'
 import http from './http'
-import base from './children/base'
+import example from './children/example'
+import defaultConfig from './children/configs/defaultConfig'
+import globalConfig from './children/configs/globalConfig'
+import shareConfig from './children/configs/shareConfig'
+import privateConfig from './children/configs/privateConfig'
+import apiArgs from './children/apiArgs'
+import RESTful from './children/RESTful'
+import handles from './children/handles'
 
 // document
 // https://github.com/sschen86/ijest
@@ -8,7 +16,8 @@ import base from './children/base'
 ijest({
   // 上下文环境
   context: {
-    // 在此处定义环境变量，引入待测试的库，引入辅助工具等
+    http,
+    adapter,
   },
 
   // 测试开始前运行
@@ -23,7 +32,14 @@ ijest({
 
   // 所有测试用例
   tests: {
-    base,
+    example,
+    defaultConfig,
+    globalConfig,
+    shareConfig,
+    privateConfig,
+    apiArgs,
+    RESTful,
+    handles,
   },
 
   // 自定义断言

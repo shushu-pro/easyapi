@@ -6,6 +6,7 @@
   "author": "sschen86@163.com",
   "license": "MIT",
   "dependencies": {
+    "@shushu.pro/adapter": "^0.0.2",
     "axios": "^0.20.0",
     "path-to-regexp": "^6.1.0"
   },
