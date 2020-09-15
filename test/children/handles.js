@@ -40,14 +40,15 @@ export default function ({ http }, { tests, test, assert }) {
 
     test('handles.response(config)', () => {
       const api = http.create({
+        env: 'development',
         response ({ responseObject }) {
           assert.isObject(responseObject)
           assert.isObject(responseObject.config)
           assert.isObject(responseObject.headers)
           responseObject.data = { a: 1 }
         },
-        success (data) {
-          assert.isEqual(data, { a: 1 })
+        success ({ responseObject }) {
+          assert.isEqual(responseObject.data, { a: 1 })
         },
       })
 
@@ -62,47 +63,42 @@ export default function ({ http }, { tests, test, assert }) {
         }),
       ])
     })
-  })
-}
 
-module.exports2 = function ({ ema, http200, http999 }, { tests, test, assert }) {
-  tests('handles', () => {
-    test('handles.success(data, config)', () => {
+    test('handles.success(config)', () => {
       const api = http.create({
-        success (data, config) {
-          assert.isObject(data)
-          assert.isBe(data.cmd, 'http200')
-          assert.isObject(config)
-          return { a: 1 }
+        success ({ responseObject }) {
+          assert.isObject(responseObject.data)
+          assert.isBe(responseObject.data.cmd, 'http200')
+          assert.isObject(responseObject.config)
+          responseObject.data = { a: 1 }
         },
       })
 
-      return api.test().then((data) => {
+      return api.test().then(({ data }) => {
         assert.isEqual(data, { a: 1 })
       })
     })
 
-    test('handles.failure(error, config)', () => {
+    test('handles.failure(config)', () => {
       const api1 = http.create({
         response () {
           throw Error('xxx')
         },
-        failure (error, config) {
-          assert.isObject(error)
+        failure (config) {
+          assert.isObject(config.error)
           assert.isObject(config)
-          assert.isBe(error.message, 'xxx')
-          throw new Error('xyz')
+          assert.isBe(config.error.message, 'xxx')
+          config.error = new Error('xyz')
         },
       })
 
-      const api2 = ema(http999({
+      const api2 = http.create(999, {
         timeout: 123,
-        failure (error, config) {
-          assert.isObject(error)
+        failure (config) {
+          assert.isObject(config.error)
           assert.isObject(config)
-          throw error
         },
-      }))
+      })
 
       return Promise.all([
         api1.test().catch(error => {
