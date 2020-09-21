@@ -169,6 +169,7 @@ function Easyapi (option) {
         ...defaults.axios,
         ...defaults.easyapi,
         ...rest,
+        logger,
         ...shareConfig,
         ...privateConfig,
         headers: {
@@ -310,25 +311,28 @@ function Easyapi (option) {
           asyncResponseObject
             .then(responseObject => {
               config.responseObject = responseObject
+              try {
+                if (typeof response === 'function') {
+                  response(config)
+                }
 
-              if (typeof response === 'function') {
-                response(config)
+                if (typeof success === 'function') {
+                  success(config)
+                }
+
+                if (envIsDevelopment && config.meta.logger) {
+                  console.warn('=== easyapi.response ===\n', { config })
+                }
+
+                // 需要对resolve的数据进行拦截处理
+                if (config.resolve) {
+                  return resolve(config.resolve(config))
+                }
+
+                resolve(config.responseObject)
+              } catch (err) {
+                return Promise.reject(err)
               }
-
-              if (typeof success === 'function') {
-                success(config)
-              }
-
-              if (envIsDevelopment && logger) {
-                console.warn('=== easyapi.response ===\n', { config })
-              }
-
-              // 需要对resolve的数据进行拦截处理
-              if (config.resolve) {
-                return resolve(config.resolve(config))
-              }
-
-              resolve(config.responseObject)
             })
             .catch(error => {
               try {
@@ -341,7 +345,7 @@ function Easyapi (option) {
               } catch (error) {
                 reject(error)
               } finally {
-                if (envIsDevelopment && logger) {
+                if (envIsDevelopment && config.meta.logger) {
                   console.warn('=== easyapi.error ===\n', { config })
                 }
               }
@@ -369,7 +373,7 @@ function Easyapi (option) {
               nextError = error
             })
             return promise.then(() => {
-              callback(nextError)
+              nextError && callback(nextError)
             })
           },
           finally (callback) {
