@@ -1,3 +1,4 @@
+
 import easyapi from '../src/'
 
 
@@ -58,3 +59,87 @@ api.test(null, {
 }).then((data) => {
   console.info('####', { data })
 })
+
+
+const configs = {
+  mod1: {
+    api1: {
+      url: 'xxx',
+    },
+    api2: {
+      url: 'yyy',
+    },
+    mod2: {
+      api3: {
+        url: 'zzz',
+      },
+    },
+  },
+  mod3: {
+    api3: {
+      url: 'lll',
+    },
+  },
+}
+
+
+const apiCaches = {}
+const apiExports = createExports(configs)
+
+function createExports (configs, keys = []) {
+  // 当前配置项存在字符串类型的url字段，则配置项为接口配置项，否则为模块配置项
+  if (typeof configs.url === 'string') {
+    console.info('createShareConfig')
+    const config = Object.freeze(configs)
+    if (true) {
+      validateConfig(config)
+    }
+
+    return (...args) => {
+      try {
+        return requestCall(config, ...args)
+      } catch (err) {
+        Promise.reject(err)
+      }
+    }
+  }
+
+  // 模块配置项，走代理模式
+  return new Proxy(configs, {
+    get (origin, key) {
+      // 已经生成了API配置项
+      if (apiCaches[key]) {
+        return apiCaches[key]
+      }
+
+      // 初始化API配置项
+      if (origin[key]) {
+        return apiCaches[key] = createExports(origin[key], keys.concat(key))
+      }
+
+      // 配置项未定义
+      throw Error(`API配置项“${keys.concat(key).join('.')}”未定义`)
+    },
+    set (origin, key, newValue) {
+      throw Error(`API配置项“${keys.concat(key).join('.')}”不允许重写`)
+    },
+    deleteProperty (origin, key) {
+      throw Error(`API配置项“${keys.concat(key).join('.')}”不允许删除`)
+    },
+  })
+}
+
+
+apiExports.mod1.api1()
+apiExports.mod1.api1()
+apiExports.mod1.api1()
+
+function requestCall (shareConfig, ...args) {
+  console.info({ shareConfig, args })
+}
+
+function validateConfig (config) {
+
+}
+
+apiExports.mod1.api1()

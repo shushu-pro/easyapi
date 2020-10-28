@@ -35,6 +35,7 @@ export default function ({ http }, { tests, test, assert }) {
         },
       })
       const api2 = http.create({
+        env: 'development',
         config: { delay: 100 },
         success () {
           assert.isTrue(Date.now() - now >= 1000)

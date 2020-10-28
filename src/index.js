@@ -306,8 +306,16 @@ function Easyapi (option) {
     }
 
     function onResponse (asyncResponseObject, config) {
+      const { logger } = config.meta
       let promise = new Promise((resolve, reject) => {
-        setTimeout(() => {
+        // 开发模式下，模拟delay效果
+        if (envIsDevelopment) {
+          setTimeout(asyncResponseCall, config.meta.delay || 0)
+        } else {
+          asyncResponseCall()
+        }
+
+        function asyncResponseCall () {
           asyncResponseObject
             .then(responseObject => {
               config.responseObject = responseObject
@@ -320,7 +328,7 @@ function Easyapi (option) {
                   success(config)
                 }
 
-                if (envIsDevelopment && config.meta.logger) {
+                if (envIsDevelopment && logger) {
                   console.warn('=== easyapi.response ===\n', { config })
                 }
 
@@ -345,12 +353,12 @@ function Easyapi (option) {
               } catch (error) {
                 reject(error)
               } finally {
-                if (envIsDevelopment && config.meta.logger) {
+                if (envIsDevelopment && logger) {
                   console.warn('=== easyapi.error ===\n', { config })
                 }
               }
             })
-        }, config.meta.delay || 0)
+        }
       })
 
       const resolve = config.meta.resolve

@@ -57,10 +57,17 @@ export default function ({ http }, { tests, test, assert }) {
       const api2 = http.create({
         config: { delay: 2000 },
         success () {
+          assert.isTrue(Date.now() - now < 2000)
+        },
+      })
+      const api3 = http.create({
+        env: 'development',
+        config: { delay: 2000 },
+        success () {
           assert.isTrue(Date.now() - now >= 2000)
         },
       })
-      return Promise.all([ api1.test(), api2.test() ])
+      return Promise.all([ api1.test(), api2.test(), api3.test() ])
     })
 
     test('shareConfig.mock', () => {
