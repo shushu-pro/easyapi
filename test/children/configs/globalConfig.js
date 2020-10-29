@@ -1,7 +1,9 @@
 export default function ({ http }, { tests, test, assert }) {
   tests('globalConfig', () => {
-    test('defaultConfig.configs', () => {
+    test('globalConfig.configs', () => {
       const api = http.create(200, {
+        logger: false,
+        resolve: (responseObject) => responseObject.data,
         configs: {
           test1: {
             url: '?cmd=http200&id=test1',
@@ -25,12 +27,15 @@ export default function ({ http }, { tests, test, assert }) {
         },
       })
 
-      return Promise.all('12345'.split('').map(i => {
-        const name = `test${i}`
-        return api[name]().then(({ data }) => {
-          assert.isBe(data.id, name)
-        })
-      }))
+      return Promise.all([
+        api.test1(),
+        api.test2(),
+        api.group1.test3(),
+        api.group1.test4(),
+        api.group2.test5(),
+      ]).then((data) => {
+        assert.isEqual(data.map((data) => data.id), [ 'test1', 'test2', 'test3', 'test4', 'test5' ])
+      })
     })
 
     test('globalConfig.baseURL', () => {

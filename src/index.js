@@ -34,369 +34,351 @@ function Easyapi (option) {
     ...rest
   } = option
 
-  const envIsDevelopment = env !== 'production'
+  const ISDEV = env !== 'production'
   const axiosInstance = axiosLib.create(Object.assign({}, defaults.axios, axios))
+  const apiCaches = {}
 
-  this.exports = createExports(configs)
+  this.exports = createExports(configs, [])
 
   // 创建导出的接口
-  function createExports (configs) {
-    const allConfigs = {}
-    const validateConfigs = {}
+  function createExports (configs, keys) {
+    // 当前配置项存在字符串类型的url字段，则配置项为接口配置项，否则为模块配置项
+    if (typeof configs.url === 'string') {
+      const config = Object.freeze(configs)
 
-    // 解析configs，从中获取接口的配置项
-    Object.keys(configs).forEach(key => {
-      const config = configs[key]
-
-      // 过滤无效的配置
-      if (!config || typeof config !== 'object') {
-        return
+      if (ISDEV) {
+        validateConfig(config, keys)
       }
 
-      // 假如当前项存在url属性，则认定是API配置项
-      if (typeof config.url === 'string') {
-        return addConfig(key, config)
+      return (...args) => {
+        try {
+          return requestCall(config, ...args)
+        } catch (err) {
+          Promise.reject(err)
+        }
       }
+    }
 
-      const childConfigs = config
-      const groupName = key
-      Object.keys(childConfigs).forEach(key => {
-        const config = childConfigs[key]
-        if (!config || typeof config !== 'object') {
-          return
+    // 模块配置项，走代理模式
+    return new Proxy(configs, {
+      get (origin, key) {
+      // 已经生成了API配置项
+        if (apiCaches[key]) {
+          return apiCaches[key]
         }
 
-        return addConfig(key, config, groupName)
-      })
-    })
+        // 初始化API配置项
+        if (origin[key]) {
+          return apiCaches[key] = createExports(origin[key], keys.concat(key))
+        }
 
-    return new Proxy({}, {
-      get: (configs, key) => {
-        if (!allConfigs[key]) {
-          return () => console.warn(`接口“${key}”未配置`)
-        }
-        return (...args) => {
-          try {
-            return requestCall(allConfigs[key], ...args)
-          } catch (error) {
-            return Promise.reject(error)
-          }
-        }
+        // 配置项未定义
+        throw Error(`API配置“${keys.concat(key).join('.')}”未定义`)
+      },
+      set (origin, key, newValue) {
+        throw Error(`API配置“${keys.concat(key).join('.')}”不允许重写`)
+      },
+      deleteProperty (origin, key) {
+        throw Error(`API配置“${keys.concat(key).join('.')}”不允许删除`)
       },
     })
+  }
 
-    function addConfig (key, config, groupName) {
-      // 开发模式下对配置项做重复，完整性校验
-      if (envIsDevelopment) {
-        const label = `接口：${[ groupName, key ]}`
-        const existsConfigInfo = validateConfigs[key]
-        // 已经存在的接口
-        if (existsConfigInfo) {
-          return console.error(`注册接口失败；配置冲突：${existsConfigInfo.join('.')}，${[ groupName, key ].join('.')}`)
-        }
+  // 校验配置项是否正确
+  function validateConfig ({ mock }, keys) {
+    if (mock && typeof mock !== 'function') {
+      return console.error(`API配置“${keys.join('.')}”的字段mock不为Function`)
+    }
+  }
 
-        if (typeof config.url !== 'string') {
-          return console.error(`${label}配置项url错误`)
-        }
+  // 发起请求
+  function requestCall (shareConfig, sendData, callback, privateConfig) {
+    // 由参数callback是否传入决定是callback模式还是Promise模式
+    // sendData 由method决定是data还是params
+    // sendData, callback
+    // sendData, callback, privateConfig
+    // sendData, privateConfig
+    // sendData
 
-        if (config.mock && typeof config.mock !== 'function') {
-          return console.error(`${label}配置项mock错误`)
-        }
-
-        validateConfigs[key] = [ groupName, key ]
-      }
-      allConfigs[key] = config
+    // 仅传了配置项
+    if (sendData == null && typeof callback === 'object') {
+      // requestCall(null, privateConfig)
+      privateConfig = callback
+      callback = null
+      sendData = null
+    } else if (typeof sendData === 'function') { // 无sendData参数
+      // requestCall(callback)
+      privateConfig = callback
+      callback = sendData
+      sendData = null
+    } else if (typeof callback !== 'function') { // 不传callback，那么属于Promise模式
+      // requestCall(sendData, privateConfig)
+      privateConfig = callback
+      callback = null
     }
 
+    sendData = sendData || {}
+    callback = callback || null
+    privateConfig = privateConfig || {}
 
-    function requestCall (shareConfig, sendData, callback, privateConfig) {
-      // 由参数callback是否传入决定是callback模式还是Promise模式
-      // sendData 由method决定是data还是params
-      // sendData, callback
-      // sendData, callback, privateConfig
-      // sendData, privateConfig
-      // sendData
+    const config = new Config({ shareConfig, privateConfig, sendData }) // 当前请求实例的配置项
 
-      // 仅传了配置项
-      if (sendData == null && typeof callback === 'object') {
-        // requestCall(null, privateConfig)
-        privateConfig = callback
-        callback = null
-        sendData = null
-      } else if (typeof sendData === 'function') { // 无sendData参数
-        // requestCall(callback)
-        privateConfig = callback
-        callback = sendData
-        sendData = null
-      } else if (typeof callback !== 'function') { // 不传callback，那么属于Promise模式
-        // requestCall(sendData, privateConfig)
-        privateConfig = callback
-        callback = null
-      }
-
-      sendData = sendData || {}
-      callback = callback || null
-      privateConfig = privateConfig || {}
-
-      const config = new Config({ shareConfig, privateConfig, sendData }) // 当前请求实例的配置项
-
-      // 请求拦截器中进行处理
-      if (typeof request === 'function') {
-        request(config)
-      }
-
-      convertRESTful(config)
-
-      const asyncResult = (envIsDevelopment && config.meta.mock) ? mockResponse(config) : httpResponse(config)
-
-      // 返回promise模式
-      if (!callback) {
-        return asyncResult
-      }
-
-      asyncResult
-        .then((responseObject) => {
-          callback(responseObject, null)
-        })
-        .catch((error) => {
-          callback({}, error)
-        })
+    // 请求拦截器中进行处理
+    if (typeof request === 'function') {
+      request(config)
     }
 
-    // 创建配置类
-    function Config ({ shareConfig, privateConfig, sendData }) {
-      const config = {
-        ...defaults.axios,
-        ...defaults.easyapi,
-        ...rest,
-        logger,
-        ...shareConfig,
-        ...privateConfig,
-        headers: {
-          ...shareConfig.headers,
-          ...privateConfig.headers,
+    convertRESTful(config)
+
+    const asyncResult = (ISDEV && config.meta.mock) ? mockResponse(config) : httpResponse(config)
+
+    // 返回promise模式
+    if (!callback) {
+      return asyncResult
+    }
+
+    asyncResult
+      .then((responseObject) => {
+        callback(responseObject, null)
+      })
+      .catch((error) => {
+        callback({}, error)
+      })
+  }
+
+  // 创建配置类
+  function Config ({ shareConfig, privateConfig, sendData }) {
+    const config = {
+      ...defaults.axios,
+      ...defaults.easyapi,
+      ...rest,
+      logger,
+      ...shareConfig,
+      ...privateConfig,
+      headers: {
+        ...shareConfig.headers,
+        ...privateConfig.headers,
+      },
+    }
+
+    this.meta = config
+    // this.state = 0 // 0:INIT, 1:RESPONSE, 2:RESOLVE, 3:REJECT, 4:FINNALY, 6:RESOLVEDATA
+    this.sendData = sendData
+    this.error = null
+    this.responseObject = null
+
+    config.method = (config.method || defaults.axios.method).toUpperCase() // 请求方式
+
+    // 放入取消请求的钩子
+    const { abort } = config
+    if (abort && typeof abort === 'object') {
+      const source = CancelToken.source()
+      config.cancelToken = source.token
+      abort.trigger = (message) => {
+        source.cancel(message)
+      }
+    }
+    this.axios = function () {
+      let data = null
+      let params = null
+
+      const { sendData, meta } = this
+
+      if (/^GET$/i.test(meta.method)) {
+        params = sendData
+      } else if (/^(POST|PUT)$/i.test(meta.method)) {
+        data = sendData
+      }
+
+      return {
+        ...meta,
+        data,
+        params: {
+          ...meta.params,
+          ...params,
         },
       }
+    }
+  }
 
-      this.meta = config
-      // this.state = 0 // 0:INIT, 1:RESPONSE, 2:RESOLVE, 3:REJECT, 4:FINNALY, 6:RESOLVEDATA
-      this.sendData = sendData
-      this.error = null
-      this.responseObject = null
+  // 转化RESTFul路径
+  function convertRESTful (config) {
+    const { sendData, meta } = config
+    const { params, url } = meta
 
-      config.method = (config.method || defaults.axios.method).toUpperCase() // 请求方式
+    const RESTFulParams = { ...params }
+    Object.assign(RESTFulParams, sendData)
 
-      // 放入取消请求的钩子
-      const { abort } = config
-      if (abort && typeof abort === 'object') {
-        const source = CancelToken.source()
-        config.cancelToken = source.token
-        abort.trigger = (message) => {
-          source.cancel(message)
+    // if (method === 'GET') {
+    //   Object.assign(RESTFulParams, sendData)
+    // } else {
+    //   Object.assign(RESTFulParams, sendData)
+    // }
+
+    const urlSplits = url.split('?')
+    let baseUrl = urlSplits.shift()
+    const queryString = urlSplits.join('?')
+
+    // /api/${id}
+    if (/\{\w+\}/.test(baseUrl)) {
+      baseUrl = baseUrl.replace(/\{(\w+)\}/g, (match, key) => {
+        if (key in RESTFulParams) {
+          return RESTFulParams[key]
         }
-      }
-      this.axios = function () {
-        let data = null
-        let params = null
-
-        const { sendData, meta } = this
-
-        if (/^GET$/i.test(meta.method)) {
-          params = sendData
-        } else if (/^(POST|PUT)$/i.test(meta.method)) {
-          data = sendData
-        }
-
-        return {
-          ...meta,
-          data,
-          params: {
-            ...meta.params,
-            ...params,
-          },
-        }
-      }
+        return match
+      })
     }
 
-    // 转化RESTFul路径
-    function convertRESTful (config) {
-      const { sendData, meta } = config
-      const { params, url } = meta
-
-      const RESTFulParams = { ...params }
-      Object.assign(RESTFulParams, sendData)
-
-      // if (method === 'GET') {
-      //   Object.assign(RESTFulParams, sendData)
-      // } else {
-      //   Object.assign(RESTFulParams, sendData)
-      // }
-
-      const urlSplits = url.split('?')
-      let baseUrl = urlSplits.shift()
-      const queryString = urlSplits.join('?')
-
-      // /api/${id}
-      if (/\{\w+\}/.test(baseUrl)) {
-        baseUrl = baseUrl.replace(/\{(\w+)\}/g, (match, key) => {
-          if (key in RESTFulParams) {
-            return RESTFulParams[key]
-          }
-          return match
-        })
-      }
-
-      // /api/:id
-      if (/:\w+/.test(baseUrl)) {
-        baseUrl = compile(baseUrl, { encode: encodeURIComponent })(RESTFulParams)
-      }
-
-      meta.url = baseUrl + (queryString ? `?${queryString}` : '')
+    // /api/:id
+    if (/:\w+/.test(baseUrl)) {
+      baseUrl = compile(baseUrl, { encode: encodeURIComponent })(RESTFulParams)
     }
 
-    // 使用本地mock发起请求
-    function mockResponse (config) {
-      const { meta } = config
-      try {
-        const responseObject = meta.mock({
-          sendData: config.sendData,
-          headers: meta.headers,
-          config: config.meta,
-        })
-        const asyncResponseObject = new Promise((resolve, reject) => {
-          if (isPromise(responseObject)) {
-            responseObject.then((responseObject) => {
-              resolveResponseObject(responseObject)
-            }).catch(reject)
-          } else {
+    meta.url = baseUrl + (queryString ? `?${queryString}` : '')
+  }
+
+  // 使用本地mock发起请求
+  function mockResponse (config) {
+    const { meta } = config
+    try {
+      const responseObject = meta.mock({
+        sendData: config.sendData,
+        headers: meta.headers,
+        config: config.meta,
+      })
+      const asyncResponseObject = new Promise((resolve, reject) => {
+        if (isPromise(responseObject)) {
+          responseObject.then((responseObject) => {
             resolveResponseObject(responseObject)
-          }
-          function resolveResponseObject (responseObject = {}) {
-            const { $body, $headers } = responseObject
+          }).catch(reject)
+        } else {
+          resolveResponseObject(responseObject)
+        }
+        function resolveResponseObject (responseObject = {}) {
+          const { $body, $headers } = responseObject
 
-            // 返回的即body
-            if (!$body && !$headers) {
-              return resolve({
-                data: responseObject,
-                headers: {},
-                config: config.meta,
-              })
-            }
-
-            resolve({
-              data: $body || null,
-              headers: $headers || {},
+          // 返回的即body
+          if (!$body && !$headers) {
+            return resolve({
+              data: responseObject,
+              headers: {},
               config: config.meta,
             })
           }
-        })
 
-        return onResponse(asyncResponseObject, config)
-      } catch (error) {
-        return Promise.reject(error)
-      }
-      function isPromise (data) {
-        return typeof data === 'object' && typeof data.then === 'function'
-      }
-    }
-
-    // axios发起http请求
-    function httpResponse (config) {
-      return onResponse(axiosInstance(config.axios()), config)
-    }
-
-    function onResponse (asyncResponseObject, config) {
-      const { logger } = config.meta
-      let promise = new Promise((resolve, reject) => {
-        // 开发模式下，模拟delay效果
-        if (envIsDevelopment) {
-          setTimeout(asyncResponseCall, config.meta.delay || 0)
-        } else {
-          asyncResponseCall()
-        }
-
-        function asyncResponseCall () {
-          asyncResponseObject
-            .then(responseObject => {
-              config.responseObject = responseObject
-              try {
-                if (typeof response === 'function') {
-                  response(config)
-                }
-
-                if (typeof success === 'function') {
-                  success(config)
-                }
-
-                if (envIsDevelopment && logger) {
-                  console.warn('=== easyapi.response ===\n', { config })
-                }
-
-                // 需要对resolve的数据进行拦截处理
-                if (config.resolve) {
-                  return resolve(config.resolve(config))
-                }
-
-                resolve(config.responseObject)
-              } catch (err) {
-                return Promise.reject(err)
-              }
-            })
-            .catch(error => {
-              try {
-                if (typeof failure === 'function') {
-                  config.error = error
-                  failure(config)
-                  return reject(config.error)
-                }
-                reject(error)
-              } catch (error) {
-                reject(error)
-              } finally {
-                if (envIsDevelopment && logger) {
-                  console.warn('=== easyapi.error ===\n', { config })
-                }
-              }
-            })
+          resolve({
+            data: $body || null,
+            headers: $headers || {},
+            config: config.meta,
+          })
         }
       })
 
-      const resolve = config.meta.resolve
-        ? (responseObject) => config.meta.resolve(responseObject)
-        : (responseObject) => responseObject
+      return onResponse(asyncResponseObject, config)
+    } catch (error) {
+      return Promise.reject(error)
+    }
+    function isPromise (data) {
+      return typeof data === 'object' && typeof data.then === 'function'
+    }
+  }
 
-      if (config.meta.errorIgnore) {
-        let nextError
-        const fakePromise = {
-          then (callback) {
-            promise = promise.then((responseObject) => {
-              callback(resolve(responseObject))
-            }).catch((error) => {
-              nextError = error
-            })
-            return fakePromise
-          },
-          catch (callback) {
-            promise = promise.catch((error) => {
-              nextError = error
-            })
-            return promise.then(() => {
-              nextError && callback(nextError)
-            })
-          },
-          finally (callback) {
-            return promise.catch(() => {}).then(() => {
-              callback()
-            })
-          },
-        }
-        return fakePromise
+  // axios发起http请求
+  function httpResponse (config) {
+    return onResponse(axiosInstance(config.axios()), config)
+  }
+
+  function onResponse (asyncResponseObject, config) {
+    const { logger } = config.meta
+    let promise = new Promise((resolve, reject) => {
+      // 开发模式下，模拟delay效果
+      if (ISDEV) {
+        setTimeout(asyncResponseCall, config.meta.delay || 0)
+      } else {
+        asyncResponseCall()
       }
 
-      return promise.then((responseObject) => {
-        return Promise.resolve(resolve(responseObject))
-      })
+      function asyncResponseCall () {
+        asyncResponseObject
+          .then(responseObject => {
+            config.responseObject = responseObject
+            try {
+              if (typeof response === 'function') {
+                response(config)
+              }
+
+              if (typeof success === 'function') {
+                success(config)
+              }
+
+              if (ISDEV && logger) {
+                console.warn('=== easyapi.response ===\n', { config })
+              }
+
+              // 需要对resolve的数据进行拦截处理
+              if (config.resolve) {
+                return resolve(config.resolve(config))
+              }
+
+              resolve(config.responseObject)
+            } catch (err) {
+              return Promise.reject(err)
+            }
+          })
+          .catch(error => {
+            try {
+              if (typeof failure === 'function') {
+                config.error = error
+                failure(config)
+                return reject(config.error)
+              }
+              reject(error)
+            } catch (error) {
+              reject(error)
+            } finally {
+              if (ISDEV && logger) {
+                console.warn('=== easyapi.error ===\n', { config })
+              }
+            }
+          })
+      }
+    })
+
+    const resolve = config.meta.resolve
+      ? (responseObject) => config.meta.resolve(responseObject)
+      : (responseObject) => responseObject
+
+    if (config.meta.errorIgnore) {
+      let nextError
+      const fakePromise = {
+        then (callback) {
+          promise = promise.then((responseObject) => {
+            callback(resolve(responseObject))
+          }).catch((error) => {
+            nextError = error
+          })
+          return fakePromise
+        },
+        catch (callback) {
+          promise = promise.catch((error) => {
+            nextError = error
+          })
+          return promise.then(() => {
+            nextError && callback(nextError)
+          })
+        },
+        finally (callback) {
+          return promise.catch(() => {}).then(() => {
+            callback()
+          })
+        },
+      }
+      return fakePromise
     }
+
+    return promise.then((responseObject) => {
+      return Promise.resolve(resolve(responseObject))
+    })
   }
 }
 
