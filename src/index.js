@@ -290,7 +290,7 @@ function Easyapi (option) {
 
   function onResponse (asyncResponseObject, config) {
     const { logger } = config.meta
-    let promise = new Promise((resolve, reject) => {
+    const promise = new Promise((resolve, reject) => {
       // 开发模式下，模拟delay效果
       if (ISDEV) {
         setTimeout(asyncResponseCall, config.meta.delay || 0)
@@ -344,42 +344,47 @@ function Easyapi (option) {
       }
     })
 
-    const resolve = config.meta.resolve
+    const resolveDataTransformer = config.meta.resolve
       ? (responseObject) => config.meta.resolve(responseObject)
       : (responseObject) => responseObject
 
+
     if (config.meta.errorIgnore) {
-      let nextError
-      const fakePromise = {
-        then (callback) {
-          promise = promise.then((responseObject) => {
-            callback(resolve(responseObject))
-          }).catch((error) => {
-            nextError = error
-          })
-          return fakePromise
-        },
-        catch (callback) {
-          promise = promise.catch((error) => {
-            nextError = error
-          })
-          return promise.then(() => {
-            nextError && callback(nextError)
-          })
-        },
-        finally (callback) {
-          return promise.catch(() => {}).then(() => {
-            callback()
-          })
-        },
-      }
-      return fakePromise
+      return new IgnoreErrorPromise(promise, resolveDataTransformer)
     }
 
-    return promise.then((responseObject) => {
-      return Promise.resolve(resolve(responseObject))
-    })
+    return promise.then((responseObject) => Promise.resolve(resolveDataTransformer(responseObject)))
   }
 }
 
 export default easyapi
+
+function IgnoreErrorPromise (promise, resolveDataTransformer) {
+  let nextError
+
+  this.then = function (callback) {
+    promise = promise.then((responseObject) => {
+      callback(resolveDataTransformer(responseObject))
+    }).catch((error) => {
+      nextError = error
+    })
+    return this
+  }
+
+  this.catch = function (callback) {
+    promise = promise.catch((error) => {
+      nextError = error
+    })
+    return promise.then(() => {
+      nextError && callback(nextError)
+    })
+  }
+
+  this.finally = function (callback) {
+    return promise.catch(() => {}).then(() => {
+      callback()
+    })
+  }
+}
+
+IgnoreErrorPromise.prototype = new Promise(() => {})
