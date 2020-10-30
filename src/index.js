@@ -361,8 +361,13 @@ export default easyapi
 
 function IgnoreErrorPromise (promise, resolveDataTransformer) {
   let nextError
+  let errorCatched = false
 
   this.then = function (callback) {
+    // 假如还存在错误，则下次调用直接跳过
+    if (nextError) {
+      return this
+    }
     promise = promise.then((responseObject) => {
       callback(resolveDataTransformer(responseObject))
     }).catch((error) => {
@@ -374,9 +379,12 @@ function IgnoreErrorPromise (promise, resolveDataTransformer) {
   this.catch = function (callback) {
     promise = promise.catch((error) => {
       nextError = error
+      errorCatched = true
     })
     return promise.then(() => {
-      nextError && callback(nextError)
+      const error = nextError
+      nextError = null
+      error && callback(error)
     })
   }
 

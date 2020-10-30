@@ -12,6 +12,7 @@ import mock from './children/configs/mock'
 import apiArgs from './children/apiArgs'
 import RESTful from './children/RESTful'
 import handles from './children/handles'
+import IgnoreErrorPromise from './children/util/IgnoreErrorPromise'
 
 
 // document
@@ -47,6 +48,7 @@ ijest({
     RESTful,
     handles,
     example,
+    IgnoreErrorPromise,
   },
 
   // 自定义断言
