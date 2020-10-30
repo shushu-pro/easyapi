@@ -388,3 +388,4 @@ function IgnoreErrorPromise (promise, resolveDataTransformer) {
 }
 
 IgnoreErrorPromise.prototype = new Promise(() => {})
+IgnoreErrorPromise.prototype.constructor = IgnoreErrorPromise
