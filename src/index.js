@@ -1,6 +1,7 @@
 import axiosLib from 'axios'
 import { compile } from 'path-to-regexp'
 import defaults from './config'
+import IgnoreErrorPromise from './IgnoreErrorPromise'
 
 const CancelToken = axiosLib.CancelToken
 
@@ -39,6 +40,28 @@ function Easyapi (option) {
   const apiCaches = {}
 
   this.exports = createExports(configs, [])
+
+  const ignoreErrorName = Symbol('ignoreError')
+  if (typeof window === 'object' && typeof window.addEventListener === 'function') {
+    // 浏览器环境
+    window.addEventListener('unhandledrejection', (event) => {
+      event.reason.name === ignoreErrorName && event.preventDefault()
+    })
+  } else {
+    process.on('unhandledRejection', (reason, p) => {
+      console.log('####', reason)
+      // application specific logging, throwing an error, or other logic here
+    })
+    process.on('uncaughtException', function (err) {
+      console.log('####2', err)
+    }) // 监听未捕获的异常
+    // process.on('unhandledRejection', (reason) => {
+    //   console.log('未处理的拒绝：', '原因：', reason)
+    //   if (event.reason.name !== ignoreErrorName) {
+    //     throw reason
+    //   }
+    // })
+  }
 
   // 创建导出的接口
   function createExports (configs, keys) {
@@ -350,7 +373,12 @@ function Easyapi (option) {
 
 
     if (config.meta.errorIgnore) {
-      return new IgnoreErrorPromise(promise, resolveDataTransformer)
+      promise.catch(err => {
+        const nextError = err
+        nextError.name = ignoreErrorName
+        return Promise.reject(nextError)
+      })
+      // return new IgnoreErrorPromise(promise, resolveDataTransformer)
     }
 
     return promise.then((responseObject) => Promise.resolve(resolveDataTransformer(responseObject)))
@@ -358,42 +386,3 @@ function Easyapi (option) {
 }
 
 export default easyapi
-
-function IgnoreErrorPromise (promise, resolveDataTransformer) {
-  let nextError
-  let errorCatched = false
-
-  this.then = function (callback) {
-    // 假如还存在错误，则下次调用直接跳过
-    if (nextError) {
-      return this
-    }
-    promise = promise.then((responseObject) => {
-      callback(resolveDataTransformer(responseObject))
-    }).catch((error) => {
-      nextError = error
-    })
-    return this
-  }
-
-  this.catch = function (callback) {
-    promise = promise.catch((error) => {
-      nextError = error
-      errorCatched = true
-    })
-    return promise.then(() => {
-      const error = nextError
-      nextError = null
-      error && callback(error)
-    })
-  }
-
-  this.finally = function (callback) {
-    return promise.catch(() => {}).then(() => {
-      callback()
-    })
-  }
-}
-
-IgnoreErrorPromise.prototype = new Promise(() => {})
-IgnoreErrorPromise.prototype.constructor = IgnoreErrorPromise
