@@ -106,7 +106,7 @@ export default function ({ http }, { tests, test, assert }) {
         abort.trigger(errorMessage)
       }, 20)
 
-      return api.test(sendData, privateConfig).then()
+      return api.test(sendData, privateConfig).then().catch(() => {})
     })
   })
 }

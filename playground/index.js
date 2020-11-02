@@ -10,7 +10,7 @@ const api = easyapi({
   configs: {
     test: {
       url: '?cmd=http200',
-      errorIgnore: true,
+      // errorIgnore: true,
 
     //   reqa: {
     //     pageSize: Number,
@@ -34,22 +34,25 @@ const api = easyapi({
   },
   resolve: ({ data }) => data,
   response (config) {
-    const { data } = config.responseObject
-    const { code } = data
+    throw Error('abcde')
+    // const { data } = config.responseObject
+    // const { code } = data
 
-    if (code === 1008) {
-      throw Error('NO-LOGIN')
-    }
+    // if (code === 1008) {
+    //   throw Error('NO-LOGIN')
+    // }
 
-    if (code !== 0) {
-      throw Error(data.message || '未知错误')
-    }
+    // if (code !== 0) {
+    //   throw Error(data.message || '未知错误')
+    // }
   },
   success (config) {
     config.responseObject.data = 'xxxxx'
   },
   failure (config) {
-    console.info(config.error)
+    if (!config.meta.errorMessageIgnore) {
+      console.info(config.error.message)
+    }
   },
 
 })
@@ -60,6 +63,9 @@ api.test(null, {
   console.info('####', { data })
 })
 
+api.test(null, { errorIgnore: true }).finally(() => {
+  console.info('yes')
+})
 
 const configs = {
   mod1: {
@@ -91,9 +97,9 @@ function createExports (configs, keys = []) {
   if (typeof configs.url === 'string') {
     console.info('createShareConfig')
     const config = Object.freeze(configs)
-    if (true) {
-      validateConfig(config)
-    }
+    // if (true) {
+    //   validateConfig(config)
+    // }
 
     return (...args) => {
       try {

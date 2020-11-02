@@ -6,4 +6,7 @@ module.exports = {
     node: true,
     browser: true,
   },
+  rules: {
+    'no-console': [ 'warn', { allow: [ 'warn', 'error' ] } ],
+  },
 }

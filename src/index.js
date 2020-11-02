@@ -1,7 +1,6 @@
 import axiosLib from 'axios'
 import { compile } from 'path-to-regexp'
 import defaults from './config'
-import IgnoreErrorPromise from './IgnoreErrorPromise'
 
 const CancelToken = axiosLib.CancelToken
 
@@ -41,26 +40,13 @@ function Easyapi (option) {
 
   this.exports = createExports(configs, [])
 
-  const ignoreErrorName = Symbol('ignoreError')
+  const ignoreErrorName = { IGNORE_ERROR: true }
+
   if (typeof window === 'object' && typeof window.addEventListener === 'function') {
     // 浏览器环境
     window.addEventListener('unhandledrejection', (event) => {
       event.reason.name === ignoreErrorName && event.preventDefault()
     })
-  } else {
-    process.on('unhandledRejection', (reason, p) => {
-      console.log('####', reason)
-      // application specific logging, throwing an error, or other logic here
-    })
-    process.on('uncaughtException', function (err) {
-      console.log('####2', err)
-    }) // 监听未捕获的异常
-    // process.on('unhandledRejection', (reason) => {
-    //   console.log('未处理的拒绝：', '原因：', reason)
-    //   if (event.reason.name !== ignoreErrorName) {
-    //     throw reason
-    //   }
-    // })
   }
 
   // 创建导出的接口
@@ -85,7 +71,7 @@ function Easyapi (option) {
     // 模块配置项，走代理模式
     return new Proxy(configs, {
       get (origin, key) {
-      // 已经生成了API配置项
+        // 已经生成了API配置项
         if (apiCaches[key]) {
           return apiCaches[key]
         }
@@ -371,12 +357,11 @@ function Easyapi (option) {
       ? (responseObject) => config.meta.resolve(responseObject)
       : (responseObject) => responseObject
 
-
     if (config.meta.errorIgnore) {
-      promise.catch(err => {
+      return promise.catch(err => {
         const nextError = err
         nextError.name = ignoreErrorName
-        return Promise.reject(nextError)
+        throw nextError
       })
       // return new IgnoreErrorPromise(promise, resolveDataTransformer)
     }

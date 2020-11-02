@@ -13,6 +13,7 @@ import apiArgs from './children/apiArgs'
 import RESTful from './children/RESTful'
 import handles from './children/handles'
 import IgnoreErrorPromise from './children/util/IgnoreErrorPromise'
+import feature from './children/feature'
 
 
 // document
@@ -49,6 +50,7 @@ ijest({
     handles,
     example,
     IgnoreErrorPromise,
+    feature,
   },
 
   // 自定义断言
