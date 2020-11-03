@@ -1,6 +1,6 @@
 {
   "name": "@shushu.pro/easyapi",
-  "version": "0.1.12",
+  "version": "0.1.13",
   "main": "dist/index.cjs.js",
   "module": "dist/index.esm.js",
   "author": "sschen86@163.com",
