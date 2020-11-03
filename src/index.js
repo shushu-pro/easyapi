@@ -357,16 +357,15 @@ function Easyapi (option) {
       ? (responseObject) => config.meta.resolve(responseObject)
       : (responseObject) => responseObject
 
+    let nextPromise = promise
     if (config.meta.errorIgnore) {
-      return promise.catch(err => {
-        const nextError = err
-        nextError.name = ignoreErrorName
-        throw nextError
+      nextPromise = nextPromise.catch(error => {
+        error.name = ignoreErrorName
+        throw error
       })
-      // return new IgnoreErrorPromise(promise, resolveDataTransformer)
     }
 
-    return promise.then((responseObject) => Promise.resolve(resolveDataTransformer(responseObject)))
+    return nextPromise.then((responseObject) => Promise.resolve(resolveDataTransformer(responseObject)))
   }
 }
 

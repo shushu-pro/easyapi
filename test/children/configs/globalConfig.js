@@ -96,5 +96,39 @@ export default function ({ http }, { tests, test, assert }) {
       })
       return Promise.all([ api1.test(), api2.test() ])
     })
+
+    test('globalConfig.resolve', () => {
+      const api1 = http.create(200, {
+        env: 'development',
+        config: {
+          mock () {
+            return {
+              data: 'MOCK',
+            }
+          },
+        },
+        resolve: (responseObject) => responseObject.data,
+      })
+      const api2 = http.create(200, {
+        env: 'development',
+        config: {
+          mock () {
+            return {
+              data: 'MOCK',
+            }
+          },
+        },
+        resolve: (responseObject) => responseObject.data,
+        errorIgnore: true,
+      })
+      return Promise.all([
+        api1.test().then((data) => {
+          assert.isEqual(data, { data: 'MOCK' })
+        }),
+        api2.test().then((data) => {
+          assert.isEqual(data, { data: 'MOCK' })
+        }),
+      ])
+    })
   })
 }
