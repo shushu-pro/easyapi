@@ -6,6 +6,7 @@ import defaultConfig from './children/configs/defaultConfig'
 import globalConfig from './children/configs/globalConfig'
 import shareConfig from './children/configs/shareConfig'
 import privateConfig from './children/configs/privateConfig'
+import configTree from './children/configs/configTree'
 import errorIgnore from './children/configs/errorIgnore'
 import resolve from './children/configs/resolve'
 import mock from './children/configs/mock'
@@ -43,6 +44,7 @@ ijest({
     shareConfig,
     privateConfig,
     errorIgnore,
+    configTree,
     mock,
     resolve,
     apiArgs,

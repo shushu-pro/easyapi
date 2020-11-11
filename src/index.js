@@ -71,14 +71,16 @@ function Easyapi (option) {
     // 模块配置项，走代理模式
     return new Proxy(configs, {
       get (origin, key) {
+        const fullKeys = keys.concat(key)
+        const fullKeysText = fullKeys.join('#')
         // 已经生成了API配置项
-        if (apiCaches[key]) {
-          return apiCaches[key]
+        if (apiCaches[fullKeysText]) {
+          return apiCaches[fullKeysText]
         }
 
         // 初始化API配置项
         if (origin[key]) {
-          return apiCaches[key] = createExports(origin[key], keys.concat(key))
+          return apiCaches[fullKeysText] = createExports(origin[key], fullKeys)
         }
 
         // 配置项未定义
