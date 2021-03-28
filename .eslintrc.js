@@ -1,12 +1,45 @@
+// .eslintrc.js
 module.exports = {
   root: true,
-  extends: '@shushu.pro/all',
+  extends: ['@shushu.pro/base'],
+  plugins: [],
   env: {
-    jest: true,
     node: true,
     browser: true,
+    es6: true,
+    jest: true,
   },
   rules: {
-    'no-console': [ 'warn', { allow: [ 'warn', 'error' ] } ],
+    // 忽略导入扩展名
+    'import/extensions': [
+      'error',
+      'never',
+      {
+        js: 'never',
+        jsx: 'never',
+        ts: 'never',
+        tsx: 'never',
+        css: 'ignorePackages',
+      },
+    ],
+    '@typescript-eslint/no-var-requires': 'off',
   },
-}
+  overrides: [],
+  settings: {
+    'import/resolver': {
+      // alias: {
+      //   map: [['@', './src']],
+      //   extensions: ['.js', '.jsx', '.json '],
+      // },
+      node: {
+        extensions: ['.js', '.jsx', '.ts', '.tsx', '.json'],
+      },
+    },
+    react: {
+      version: 'detect',
+    },
+
+    // 忽略导入类型错误提示
+    'import/ignore': [/\.(scss|less|css)$/],
+  },
+};
