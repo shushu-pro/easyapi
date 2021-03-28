@@ -1,4 +1,4 @@
-import { EasyapiAPIConfig, EasyapiContext } from './typing';
+import { EasyapiAPIConfig, EasyapiContext } from './typings';
 import RequestConfig from './RequestConfig';
 import convertRESTful from './convertRESTful';
 import cacheResult from './cacheResult';

@@ -1,5 +1,5 @@
-// import easyapi from '../src/index';
 import easyapi from '../src/index';
+// import easyapi from '../dist/index.esm';
 
 const api = easyapi({
   env: 'development',

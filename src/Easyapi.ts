@@ -1,6 +1,6 @@
 import axiosLib from 'axios';
 import createExports from './createExports';
-import { EasyapiOption, EasyapiContext } from './typing';
+import { EasyapiOption, EasyapiContext } from './typings';
 import defaults from './defaultConfigs';
 
 const IgnoreErrorName = Symbol('IgnoreErrorName');

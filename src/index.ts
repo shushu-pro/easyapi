@@ -1,5 +1,5 @@
 import Easyapi from './Easyapi';
-import { EasyapiOption } from './typing';
+import { EasyapiOption } from './typings';
 
 function easyapi(option: EasyapiOption) {
   return new Easyapi(option).exports;

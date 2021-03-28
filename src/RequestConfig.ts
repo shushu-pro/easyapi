@@ -1,6 +1,8 @@
-import { CancelToken } from 'axios';
-import { EasyapiAPIConfig, EasyapiContext } from './typing';
+import axiosLib, { AxiosRequestConfig } from 'axios';
+import { EasyapiAPIConfig, EasyapiContext } from './typings';
 import defaults from './defaultConfigs';
+
+const { CancelToken } = axiosLib;
 
 class RequestConfig {
   meta: EasyapiAPIConfig & {
@@ -61,7 +63,7 @@ class RequestConfig {
     // console.info(this);
   }
 
-  axios() {
+  axios(): AxiosRequestConfig {
     let data = null;
     let params = null;
 

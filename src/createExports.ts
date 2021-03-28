@@ -1,5 +1,5 @@
 import callRequest from './callRequest';
-import { EasyapiAPIConfig, EasyapiContext } from './typing';
+import { EasyapiAPIConfig, EasyapiContext } from './typings';
 
 // 创建导出的接口
 function createExports(configs, keys, context: EasyapiContext) {
