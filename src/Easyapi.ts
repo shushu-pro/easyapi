@@ -50,6 +50,7 @@ class Easyapi {
         cache,
       },
       apiConfigCaches: {},
+      apiResultCaches: {},
       axiosInstance: axiosLib.create({ ...defaults.axios, ...axios }),
     };
 

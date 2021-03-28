@@ -14,7 +14,6 @@ function onResponse(asyncResponseObject, config: RequestConfig) {
 
     function asyncResponseCall() {
       const { response, success, failure } = config.context.handlers;
-
       asyncResponseObject
         .then((responseObject) => {
           config.responseObject = responseObject;
@@ -59,9 +58,13 @@ function onResponse(asyncResponseObject, config: RequestConfig) {
     });
   }
 
-  return nextPromise.then((responseObject) =>
+  const result = nextPromise.then((responseObject) =>
     config.meta.resolve ? config.meta.resolve(responseObject) : responseObject
   );
+
+  config.consumeCache(result);
+
+  return result;
 }
 
 export default onResponse;

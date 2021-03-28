@@ -1,11 +1,13 @@
 import callRequest from './callRequest';
 import { EasyapiAPIConfig, EasyapiContext } from './typings';
 
+// 配置的唯一码
+let uuid = 0;
 // 创建导出的接口
 function createExports(configs, keys, context: EasyapiContext) {
   // 当前配置项存在字符串类型的url字段，则配置项为接口配置项，否则为模块配置项
   if (typeof configs.url === 'string') {
-    const config = Object.freeze(configs);
+    const config = Object.freeze({ ...configs, uuid: ++uuid });
 
     if (context.isDevelopment) {
       validateConfig(config, keys);

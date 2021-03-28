@@ -43,12 +43,11 @@ interface EasyapiContext {
   apiConfigCaches: {
     [k: string]: EasyapiAPIConfig;
   };
+  apiResultCaches: {
+    [k: string]: any;
+  };
   axiosInstance: AxiosInstance;
   [k: string]: any;
-}
-
-interface EasyapiRequestConfig {
-  kk: boolean;
 }
 
 type EasyapiAPIConfigs =
@@ -58,8 +57,14 @@ type EasyapiAPIConfigs =
     };
 
 interface EasyapiAPIConfig {
+  // 唯一码
+  uuid?: number;
+
   // 接口地址
   url: string;
+
+  // 接口描述
+  label?: string;
 
   // 缓存策略配置项
   cache?:
@@ -69,9 +74,9 @@ interface EasyapiAPIConfig {
         maxAge?: number;
 
         // 失效判断
-        expire?: () => boolean | void;
+        expire?: (config?: RequestConfig) => any;
       }
-    | (() => boolean | void);
+    | ((config?: RequestConfig) => any);
 
   // 是否开启日志输出
   logger?: boolean;
@@ -105,9 +110,4 @@ interface MockResponse {
 
 type MockData = Record<string, any>;
 
-export {
-  EasyapiOption,
-  EasyapiContext,
-  EasyapiAPIConfig,
-  EasyapiRequestConfig,
-};
+export { EasyapiOption, EasyapiContext, EasyapiAPIConfig };

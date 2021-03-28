@@ -1,8 +1,7 @@
 import RequestConfig from './RequestConfig';
 
 function cacheResult(config: RequestConfig) {
-  // console.info('cacheResult');
-  return null;
+  return config.useCache();
 }
 
 export default cacheResult;

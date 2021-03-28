@@ -13,14 +13,13 @@ import treeConfig from './easyapi/config/treeConfig';
 import errorIgnore from './easyapi/config/errorIgnore';
 import resolve from './easyapi/config/resolve';
 import mock from './easyapi/config/mock';
+import cache from './easyapi/config/cache';
 import apiArgs from './easyapi/apiArgs';
 import RESTful from './easyapi/RESTful';
 import handles from './easyapi/handles';
 
-import feature from './easyapi/feature';
+// import feature from './easyapi/feature';
 // import example from './example';
-
-const date = new Date();
 
 ijest({
   // 上下文环境
@@ -49,6 +48,7 @@ ijest({
     errorIgnore,
     resolve,
     mock,
+    cache,
     apiArgs,
     RESTful,
     handles,
