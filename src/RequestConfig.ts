@@ -196,6 +196,11 @@ class RequestConfig {
     cacheResult.activityTime = Date.now();
     cacheResult.expireValue = meta.cacheExpire ? meta.cacheExpire(this) : null;
 
+    // 失败的情况下设置缓存状态为pending
+    result.catch(() => {
+      cacheResult.state = 'Pending';
+    });
+
     let current;
     while ((current = cacheResult.waits.shift())) {
       current(result);

@@ -83,5 +83,40 @@ export default function ({ http }, { tests, test, assert }) {
         }),
       ]);
     });
+
+    test('config.cache.error', () => {
+      let i = 0;
+      const api = http.create({
+        env: 'development',
+        config: {
+          cache: true,
+          mock: () =>
+            new Promise((resolve, reject) => {
+              setTimeout(() => {
+                if (i++ === 0) {
+                  reject(Error('xx'));
+                } else {
+                  resolve('2');
+                }
+              }, 1000);
+            }),
+        },
+      });
+
+      return Promise.all([
+        api.test(),
+        new Promise((resolve) => {
+          setTimeout(() => {
+            resolve(
+              api.test().then(({ data }) => {
+                assert.isBe(data, '2');
+              })
+            );
+          }, 1005);
+        }),
+      ]).catch((e) => {
+        // ..
+      });
+    });
   });
 }
