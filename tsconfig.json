@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    "useDefineForClassFields": true,
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "types": ["node"],
+    "allowSyntheticDefaultImports": true,
+    "jsx": "react",
+    "allowJs": true,
+    "experimentalDecorators": true,
+    "skipLibCheck": false,
+    "esModuleInterop": false,
+    "forceConsistentCasingInFileNames": true,
+    "target": "esnext",
+    "module": "commonjs",
+    "baseUrl": "./",
+    "noEmit": true,
+    "moduleResolution": "Node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "paths": {
+      "@/*": ["src/*"],
+      "@npm/*":["npm/*"],
+      "@shushu.pro/*":["npm/shushu.pro/*"],
+      "@dev/easyapi":["src/easyapi/index"],
+      "@dev/easyapi/*":["src/easyapi/*"],
+      "@ijest":["test/index"]
+    },
+    "outDir": "./dist"
+  },
+  "include": ["src", "npm", "playground", "test"]
+}

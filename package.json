@@ -1,13 +1,12 @@
 {
   "name": "@shushu.pro/easyapi",
-  "version": "0.1.19",
+  "version": "0.1.18",
   "description": "",
   "main": "dist/index.cjs.js",
   "module": "dist/index.esm.js",
   "types": "types/index.d.ts",
   "author": "sschen86@163.com",
   "license": "MIT",
-  "private": true,
   "scripts": {
     "test": "jest test",
     "dev": "rollup -c ./rollup/dev.js -w",
