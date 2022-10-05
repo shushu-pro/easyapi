@@ -29,62 +29,51 @@
 2. 声明接口
 3. 使用接口
 
+### 具体实践见 template 目录
+
 ### 设置拦截器
 
 ```tsx
-import './adapter';
-
-import adapter from '@shushu.pro/adapter';
 import easyapi from '@shushu.pro/easyapi';
-import { message } from 'antd';
+import Cookies from 'js-cookie';
+import adapter from './adapter';
+import { ExtendApiConfig, ExtendEasyapiOption } from './types';
 
-import { GatewayBasePath, NODE_ENV } from '@/config';
-
-import { CustomConfig, OtherConfig } from './config.types';
-
-let token = null;
-
-const { define } = easyapi<CustomConfig, OtherConfig>({
-  env: NODE_ENV as null,
-  forceMock: true,
+const { define } = easyapi<ExtendApiConfig, ExtendEasyapiOption>({
+  mode: 'development',
   axios: {
-    baseURL: `${GatewayBasePath}api/`,
+    baseURL: '.',
   },
+  logger: true,
+  delay: 300,
+  mockForce: true,
 
   // 对响应的数据做处理
-  resolver(ctx) {
-    return ctx.responseObject.data?.data || ctx.responseObject.data?.resData;
+  dataFormat(ctx) {
+    return ctx.responseObject?.data?.data;
   },
 
   // 请求拦截器
   request(ctx) {
-    const { config, payload } = ctx;
-    const { requestAdapter, easymock, url } = config;
+    adapter.request(ctx);
 
-    // 请求适配器
-    if (typeof requestAdapter === 'function') {
-      ctx.payload = requestAdapter(payload, adapter);
-    } else if (requestAdapter && typeof requestAdapter === 'object') {
-      ctx.payload = adapter(requestAdapter, payload);
+    const { config } = ctx;
+
+    // // 启动mockjson
+    // if (typeof config.mockjson === 'string') {
+    //   config.mockBody = () => {
+    //     return mockJSON(config.mockjson, ctx.payload);
+    //   };
+    // }
+
+    // 加认证状态token
+    const csrfToken = Cookies.get('token');
+    if (csrfToken) {
+      ctx.setHeader('x-csrf-token', csrfToken);
     }
 
-    // 开启连接在线mock接口
-    if (
-      ctx.runtime.isDevelopment &&
-      easymock === true &&
-      !/^\/?mockapi\//.test(url)
-    ) {
-      ctx.url = `/mockapi/${url}`.replace(/\/+/g, '/');
-    }
-
-    // 加登录状态token
-    if (token) {
-      ctx.setHeader('token', token);
-    }
-
-    if (config.beforeRequest) {
-      config.beforeRequest(ctx);
-    }
+    // 请求前置拦截器,主要用于不同接口满足不同的处理需求
+    config.beforeRequest?.(ctx);
   },
 
   // 响应拦截器
@@ -92,66 +81,50 @@ const { define } = easyapi<CustomConfig, OtherConfig>({
     const { responseObject } = ctx;
 
     // 二进制数据，不对响应数据进行处理
-    if (responseObject.responseType === 'arraybuffer') {
+    if (responseObject.config.responseType === 'arraybuffer') {
       return;
     }
 
-    const { beforeResponse } = ctx.config;
-
     // 响应前的拦截器
-    if (beforeResponse) {
-      beforeResponse(ctx);
-    }
+    ctx.config.beforeResponse?.(ctx);
 
     // 对响应的数据做处理
     const { data, headers } = responseObject;
     const { code } = data;
 
-    // 储存鉴权码
-    if (headers?.token) {
-      token = headers.token;
-    }
-
-    // 未登录
-    if (code === 500) {
-      // throw Error('NO-LOGIN');
-    }
+    // // 储存鉴权码
+    // if (headers?.token) {
+    //   token = headers.token;
+    // }
 
     // 其他错误
     if (code !== 200 && code !== 0) {
-      throw Error(data.message || data.msg);
+      throw Error(data.message || (data as any).msg);
     }
   },
 
   // 成功响应拦截器
   success(ctx) {
-    const { config, responseObject } = ctx;
-    const { data } = responseObject;
-    const { responseAdapter, showSuccess } = config;
+    adapter.success(ctx);
 
-    // 业务数据进行适配转化
-    const bizData = data.data;
-
-    if (typeof responseAdapter === 'function') {
-      data.data = responseAdapter(bizData, adapter);
-    } else if (responseAdapter && typeof responseAdapter === 'object') {
-      data.data = adapter(responseAdapter, bizData);
-    }
+    const { config } = ctx;
+    const { showSuccess } = config;
+    const { data } = ctx.responseObject.data;
 
     if (showSuccess === true) {
-      message.success('操作成功');
+      // console.info(data.message || '操作成功');
     } else if (typeof showSuccess === 'string') {
-      message.success(showSuccess);
+      // console.info(showSuccess);
     }
   },
 
   // 错误响应拦截器
   failure(ctx) {
     const { error, config, responseObject } = ctx;
-    const responseData = responseObject.data;
+    const responseData = responseObject?.data;
 
     // 将数据信息挂到error的data属性下
-    error.data = responseData.data;
+    error.data = responseData?.data;
 
     // 阻止默认的错误处理
     if (config.showError === false) {
@@ -160,11 +133,11 @@ const { define } = easyapi<CustomConfig, OtherConfig>({
 
     // 自定义的错误信息
     if (typeof config.showError === 'string') {
-      message.error(config.showError);
+      // message.error(config.showError);
     }
     // 常规的错误处理，显示错误信息
     else {
-      message.error(error.message.substr(0, 100));
+      // message.error(error.message.substr(0, 100));
     }
   },
 });
@@ -175,10 +148,10 @@ export { define };
 ### 声明接口
 
 ```tsx
-import { define } from '@/api';
+import { define } from '@api';
 
 // 请求参数签名
-interface RequestParams {
+interface Payload {
   page: number;
   pageSize: number;
 }
@@ -191,7 +164,7 @@ interface ResponseData {
 }
 
 // 导出接口
-export const getSomeList = define<RequestParams, ResponseData>({
+export const getSomeList = define<Payload, ResponseData>({
   url: 'api/getSomeList',
   method: 'post',
 });
@@ -200,7 +173,7 @@ export const getSomeList = define<RequestParams, ResponseData>({
 ### 使用接口
 
 ```tsx
-import { getSomeList } from '@/api';
+import { getSomeList } from '@api';
 
 getSomeList({ page: 1, pageSize: 20 }).then((data) => {
   //..

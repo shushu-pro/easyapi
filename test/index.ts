@@ -1,9 +1,9 @@
 import ijest from 'ijest';
 
-import context, { Context } from './context';
+import context from './context';
 
 const { tests, run } = ijest<
-  Context,
+  typeof context,
   {
     isStringNumber: (v) => unknown;
   }
@@ -18,6 +18,8 @@ const { tests, run } = ijest<
   }),
 
   before({ http }) {
+    // 关闭warn报错
+    global.console.warn = () => undefined;
     http.start();
   },
 

@@ -1,9 +1,9 @@
 import tests from '@ijest';
 
-tests('handlers', (test, assert, { http }) => {
+tests('handlers', (test, assert, { easyapi }) => {
   test('handlers.request(ctx)', () => {
     const payload = { id: 'GX-001' };
-    const api1 = http.create({
+    const api1 = easyapi({
       request(ctx) {
         assert.isEqual(ctx.payload, payload);
         ctx.payload.id = 'GX-002';
@@ -12,7 +12,7 @@ tests('handlers', (test, assert, { http }) => {
         assert.isBe(config.params.id, 'GX-002');
       },
     });
-    const api2 = http.create({
+    const api2 = easyapi({
       request() {
         this.payload = { id: 'GX-002' };
         this.axios.timeout = 12345;
@@ -27,16 +27,16 @@ tests('handlers', (test, assert, { http }) => {
   });
 
   test('handlers.response(ctx)', () => {
-    const api = http.create({
-      env: 'development',
+    const api = easyapi({
+      mode: 'development',
       response({ responseObject }) {
         assert.isObject(responseObject);
         assert.isObject(responseObject.config);
         assert.isObject(responseObject.headers);
-        responseObject.data = { a: 1 };
+        responseObject.data.data = 1;
       },
       success({ responseObject }) {
-        assert.isEqual(responseObject.data, { a: 1 });
+        assert.isEqual(responseObject.data.data, 1);
       },
     });
 
@@ -53,14 +53,14 @@ tests('handlers', (test, assert, { http }) => {
   });
 
   test('handlers.success(ctx)', () => {
-    const api = http.create({
+    const api = easyapi({
       success({ responseObject }) {
-        assert.isObject(responseObject.data);
-        assert.isBe(responseObject.data.cmd, 'http200');
+        const responseBody = responseObject.data;
+        assert.isObject(responseBody.data);
+        assert.isBe(responseBody.data.cmd, 'http200');
         assert.isObject(responseObject.config);
-        responseObject.data = { a: 1 };
+        responseBody.data = { a: 1 };
       },
-      resolver: (ctx) => ctx.responseObject.data,
     });
 
     return api.test().then((data) => {
@@ -69,7 +69,7 @@ tests('handlers', (test, assert, { http }) => {
   });
 
   test('handlers.failure(config)', () => {
-    const api1 = http.create({
+    const api1 = easyapi({
       response() {
         throw Error('xxx');
       },
@@ -81,13 +81,18 @@ tests('handlers', (test, assert, { http }) => {
       },
     });
 
-    const api2 = http.create(999, {
-      timeout: 123,
-      failure(config) {
-        assert.isObject(config.error);
-        assert.isObject(config);
+    const api2 = easyapi(
+      {
+        axios: {
+          timeout: 123,
+        },
+        failure(config) {
+          assert.isObject(config.error);
+          assert.isObject(config);
+        },
       },
-    });
+      999
+    );
 
     return Promise.all([
       api1.test().catch((error) => {

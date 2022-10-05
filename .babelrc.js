@@ -1,3 +1,5 @@
+// jest babel 配置项
+
 module.exports = {
   presets: [
     ['@babel/preset-env', { loose: true }],
@@ -10,7 +12,9 @@ module.exports = {
       {
         root: ['.'],
         alias: {
-          '@ijest': './test/index.ts'
+          '@dev/easyapi': ['./src/index.ts'],
+          '@dev/easyapi/*': ['./src/*'],
+          '@ijest': ['./test/index.ts'],
         },
       },
     ],

@@ -3,3 +3,4 @@
 
 export * as app from './configs/app';
 export * as doc from './configs/doc';
+export * from './preset';

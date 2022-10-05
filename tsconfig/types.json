@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "types": ["node"],
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": ".",
+    "allowJs": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "resolveJsonModule": true,
+    "moduleResolution": "node",
+    "target": "ESNext",
+    "module": "ESNext",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "isolatedModules": true,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "declarationDir": "../dist"
+  },
+  "include": ["../src/index.ts"]
+}

@@ -1,4 +1,4 @@
-import { define } from '@/api';
+import { define } from '@api';
 
 export const setName = define({
   url: 'setName',

@@ -1,31 +1,24 @@
 {
   "compilerOptions": {
-    "useDefineForClassFields": true,
-    "lib": ["DOM", "DOM.Iterable", "ESNext"],
     "types": ["node"],
     "allowSyntheticDefaultImports": true,
-    "jsx": "react",
+    "baseUrl": ".",
     "allowJs": true,
     "experimentalDecorators": true,
-    "skipLibCheck": false,
-    "esModuleInterop": false,
-    "forceConsistentCasingInFileNames": true,
-    "target": "esnext",
-    "module": "commonjs",
-    "baseUrl": "./",
-    "noEmit": true,
-    "moduleResolution": "Node",
+    "emitDecoratorMetadata": true,
     "resolveJsonModule": true,
-    "isolatedModules": true,
+    "moduleResolution": "node",
+    "target": "ESNext",
+    "module": "ESNext",
     "paths": {
-      "@/*": ["src/*"],
-      "@npm/*":["npm/*"],
-      "@shushu.pro/*":["npm/shushu.pro/*"],
-      "@dev/easyapi":["src/easyapi/index"],
-      "@dev/easyapi/*":["src/easyapi/*"],
-      "@ijest":["test/index"]
-    },
-    "outDir": "./dist"
+      "@/*": ["./src/*"],
+      "@dev/easyapi": ["./src/index"],
+      "@dev/easyapi/*": ["./src/*"],
+      "@ijest": ["./test/index"],
+      "@shushu.pro/easyapi": ["./src/index"],
+      "@api": ["./template/index"],
+      "@api/*": ["./template/*"]
+    }
   },
-  "include": ["src", "npm", "playground", "test"]
+  "include": ["./playground", "./rollup", "./src", "./test", "./template"]
 }

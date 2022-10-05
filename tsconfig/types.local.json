@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "types": ["node"],
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": ".",
+    "allowJs": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "resolveJsonModule": true,
+    "moduleResolution": "node",
+    "target": "ESNext",
+    "module": "ESNext",
+    "paths": {},
+    "isolatedModules": true,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "declarationDir": "../easyapi-local"
+  },
+  "include": ["../src/index.ts"]
+}

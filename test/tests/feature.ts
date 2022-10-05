@@ -1,11 +1,13 @@
 import tests from '@ijest';
 
-tests('feature', (test, assert, { http }) => {
+tests('feature', (test, assert, { easyapi }) => {
   test('feature', () => {
-    const api = http.create({
+    const api = easyapi({
       // ..
     });
 
-    return api.test();
+    return api.test().then((data) => {
+      assert.isObject(data);
+    });
   });
 });

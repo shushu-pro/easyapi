@@ -1,20 +1,21 @@
 import tests from '@ijest';
 
-tests('api.define', (test, assert, { http }) => {
+tests('api.define', (test, assert, { easyapi }) => {
   test('api.define(option)', () => {
-    const api = http.create({
-      success(ctx) {
-        ctx.responseObject.data = 'aaa';
+    const { define } = easyapi({
+      dataFormat(ctx) {
+        return ctx.responseObject.data.data;
       },
-      resolver: (ctx) => ctx.responseObject.data,
+      success(ctx) {
+        ctx.responseObject.data.data = { name: 'aaa' };
+      },
     });
 
-    const some = api.define<{ id: number }, { name: string }>({
+    const request = define<{ id: number }, { name: string }>({
       url: '?cmd=http200',
     });
-
-    return some({ id: 222 }).then((data) => {
-      assert.isBe(data, 'aaa');
+    return request({ id: 222 }).then((data) => {
+      assert.isBe(data.name, 'aaa');
     });
   });
 });

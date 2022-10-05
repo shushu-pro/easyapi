@@ -1,8 +1,8 @@
 import tests from '@ijest';
 
-tests('api.call', (test, assert, { http }) => {
+tests('api.call', (test, assert, { easyapi }) => {
   test('api.call()', () => {
-    const api = http.create({
+    const api = easyapi({
       success(ctx) {
         ctx.responseObject.data = { code: 0, data: 888 };
       },
@@ -15,17 +15,17 @@ tests('api.call', (test, assert, { http }) => {
 
   test('api.call(payload)', () => {
     const payload = { id: 'GX-001', type: 2 };
-    const api1 = http.create({
+    const api1 = easyapi({
       response(ctx) {
-        assert.isEqual(ctx.query, payload);
+        assert.isEqual(ctx.responseObject.config.params, payload);
       },
     });
-    const api2 = http.create({
+    const api2 = easyapi({
       config: {
         method: 'post',
       },
       response(ctx) {
-        assert.isEqual(ctx.data, payload);
+        assert.isEqual(ctx.responseObject.config.data, JSON.stringify(payload));
       },
     });
     return Promise.all([api1.test(payload), api2.test(payload)]);
@@ -33,12 +33,11 @@ tests('api.call', (test, assert, { http }) => {
 
   test('api.call(payload, config)', () => {
     const payload = { id: 'GX-001', type: 2 };
-    const api = http.create({
-      response({ axios }) {
-        assert.isEqual(this.query, payload);
-        assert.isBe(axios.headers.a, 1);
+    const api = easyapi({
+      response({ responseObject }) {
+        assert.isBe(responseObject.config.headers.a, '1');
       },
     });
-    return api.test(payload, { headers: { a: 1 } });
+    return api.test(payload, { headers: { a: '1' } });
   });
 });

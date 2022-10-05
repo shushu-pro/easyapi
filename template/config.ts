@@ -1,77 +1,43 @@
-import './adapter';
-
-import adapter from '@shushu.pro/adapter';
 import easyapi from '@shushu.pro/easyapi';
-import mockJSON from '@util/mock-json';
-import { message } from 'antd';
 import Cookies from 'js-cookie';
+import adapter from './adapter';
+import { ExtendApiConfig, ExtendEasyapiOption } from './types';
 
-import { apiBasepath, NODE_ENV } from '@/config';
-
-import { CustomConfig, OtherConfig } from './config.types';
-
-let token = null;
-
-const { define } = easyapi<CustomConfig, OtherConfig>({
-  env: NODE_ENV as null,
-  forceMock: true,
+const { define } = easyapi<ExtendApiConfig, ExtendEasyapiOption>({
+  mode: 'development',
   axios: {
-    baseURL: `${apiBasepath}`,
+    baseURL: '.',
   },
-
   logger: true,
-
-  delay: 1000,
+  delay: 300,
+  mockForce: true,
 
   // 对响应的数据做处理
-  resolver(ctx) {
-    return ctx.responseObject?.data?.data || ctx.responseObject?.data?.resData;
+  dataFormat(ctx) {
+    return ctx.responseObject?.data?.data;
   },
 
   // 请求拦截器
   request(ctx) {
-    const { config, payload } = ctx;
-    const { requestAdapter, easymock, url } = config;
+    adapter.request(ctx);
 
-    // 请求适配器
-    if (typeof requestAdapter === 'function') {
-      ctx.payload = requestAdapter(payload, adapter);
-    } else if (requestAdapter && typeof requestAdapter === 'object') {
-      ctx.payload = adapter(requestAdapter, payload);
-    }
+    const { config } = ctx;
 
-    // 开启连接在线mock接口
-    if (
-      ctx.runtime.isDevelopment &&
-      easymock === true &&
-      !/^\/?mockapi\//.test(url)
-    ) {
-      ctx.url = `/mockapi/${url}`.replace(/\/+/g, '/');
-    }
-
-    if (typeof config.mockjson === 'string') {
-      config.mockBody = () => {
-        return mockJSON(config.mockjson, ctx.payload);
-      };
-    }
-
-    // if (config.mockOff) {
-    //   config.mockBody = config.mockData = config.mockHeaders = null;
+    // // 启动mockjson
+    // if (typeof config.mockjson === 'string') {
+    //   config.mockBody = () => {
+    //     return mockJSON(config.mockjson, ctx.payload);
+    //   };
     // }
 
-    // console.info(document.cookie, Cookies.get('Authorization'));
-
     // 加认证状态token
-    const csrfToken = Cookies.get('_tb_token_');
+    const csrfToken = Cookies.get('token');
     if (csrfToken) {
       ctx.setHeader('x-csrf-token', csrfToken);
     }
 
-    if (config.beforeRequest) {
-      config.beforeRequest(ctx);
-    }
-
-    // console.info('cookie', document.cookie);
+    // 请求前置拦截器,主要用于不同接口满足不同的处理需求
+    config.beforeRequest?.(ctx);
   },
 
   // 响应拦截器
@@ -79,56 +45,40 @@ const { define } = easyapi<CustomConfig, OtherConfig>({
     const { responseObject } = ctx;
 
     // 二进制数据，不对响应数据进行处理
-    if (responseObject.responseType === 'arraybuffer') {
+    if (responseObject.config.responseType === 'arraybuffer') {
       return;
     }
 
-    const { beforeResponse } = ctx.config;
-
     // 响应前的拦截器
-    if (beforeResponse) {
-      beforeResponse(ctx);
-    }
+    ctx.config.beforeResponse?.(ctx);
 
     // 对响应的数据做处理
     const { data, headers } = responseObject;
     const { code } = data;
 
-    // 储存鉴权码
-    if (headers?.token) {
-      token = headers.token;
-    }
-
-    // 未登录
-    if (code === 500) {
-      // throw Error('NO-LOGIN');
-    }
+    // // 储存鉴权码
+    // if (headers?.token) {
+    //   token = headers.token;
+    // }
 
     // 其他错误
     if (code !== 200 && code !== 0) {
-      throw Error(data.message || data.msg);
+      throw Error(data.message || (data as any).msg);
     }
   },
 
   // 成功响应拦截器
   success(ctx) {
-    const { config, responseObject } = ctx;
-    const { data } = responseObject;
-    const { responseAdapter, showSuccess } = config;
+    adapter.success(ctx);
 
-    // 业务数据进行适配转化
-    const bizData = data.data;
-
-    if (typeof responseAdapter === 'function') {
-      data.data = responseAdapter(bizData, adapter);
-    } else if (responseAdapter && typeof responseAdapter === 'object') {
-      data.data = adapter(responseAdapter, bizData);
-    }
+    const { config } = ctx;
+    const { showSuccess } = config;
+    const { data } = ctx.responseObject.data;
 
     if (showSuccess === true) {
-      message.success(data.message || data.msg || '操作成功');
+      // console.info(data.message || '操作成功');
     } else if (typeof showSuccess === 'string') {
-      message.success(showSuccess);
+      // console.info(showSuccess);
     }
   },
 
@@ -145,28 +95,13 @@ const { define } = easyapi<CustomConfig, OtherConfig>({
       return;
     }
 
-    // if (error.message === 'NO-LOGIN') {
-    //   Modal.confirm({
-    //     title: '确定重新登录',
-    //     content: '登录信息已失效，点击取消继续留在该页面，或者重新登录',
-    //     okText: '重新登录',
-    //     width: 500,
-    //     centered: true,
-    //     onOk () {
-    //       window.location.href = '/login';
-    //     },
-    //     onCancel () { },
-    //   });
-    //   return;
-    // }
-
     // 自定义的错误信息
     if (typeof config.showError === 'string') {
-      message.error(config.showError);
+      // message.error(config.showError);
     }
     // 常规的错误处理，显示错误信息
     else {
-      message.error(error.message.substr(0, 100));
+      // message.error(error.message.substr(0, 100));
     }
   },
 });
