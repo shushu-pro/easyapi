@@ -163,7 +163,31 @@ module.exports = {
   // timers: "real",
 
   // A map from regular expressions to paths to transformers
-  // transform: null,
+  transform: {
+    '^.+\\.(t|j)sx?$': [
+      'babel-jest',
+      {
+        presets: [
+          ['@babel/preset-env', { loose: true }],
+          ['@babel/preset-typescript'],
+        ],
+        plugins: [
+          ['@babel/plugin-proposal-class-properties', { loose: true }],
+          [
+            'module-resolver',
+            {
+              root: ['.'],
+              alias: {
+                '@dev/easyapi': ['./src/index.ts'],
+                '@dev/easyapi/*': ['./src/*'],
+                '@ijest': ['./test/index.ts'],
+              },
+            },
+          ],
+        ],
+      },
+    ],
+  },
 
   // An array of regexp pattern strings that are matched against all source file paths, matched files will skip transformation
   // transformIgnorePatterns: [

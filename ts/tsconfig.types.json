@@ -1,0 +1,10 @@
+{
+  "files": ["../src/index.ts"],
+  "compilerOptions": {
+    "declaration": true,
+    "declarationDir": "../dist",
+    "emitDeclarationOnly": true,
+    "target": "ESNext",
+    "moduleResolution": "Node"
+  }
+}

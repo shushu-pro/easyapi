@@ -1,9 +1,9 @@
-const { eslintAlias } = require('./tsrc');
+const { eslintAlias } = require('@shushu.pro/tsconfig');
 
 module.exports = {
   root: true,
   extends: ['@shushu.pro/base'],
-  ignorePatterns: ['temp', 'dist', '/public', '**/vendor/*.js'],
+  ignorePatterns: ['temp', 'dist', '/public', '**/vendor/*.js', 'dist-local'],
   rules: {
     // 允许多重三元运算符
     'no-nested-ternary': 'off',
@@ -50,7 +50,7 @@ module.exports = {
       // 别名配置
       // https://www.npmjs.com/package/eslint-import-resolver-alias
       alias: {
-        map: eslintAlias,
+        map: eslintAlias(),
         extensions: ['.ts', '.tsx', '.js', '.jsx', '.json'],
       },
       node: {

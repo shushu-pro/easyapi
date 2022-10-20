@@ -32,6 +32,7 @@ function abort() {
 const version = '0.1.18';
 
 export default easyapi;
+export { easyapi };
 export { Easyapi, version };
 export { ErrorIgnoreName } from './const';
 export { default as Context } from './Context';

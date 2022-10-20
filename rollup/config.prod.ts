@@ -1,26 +1,17 @@
-import config from './core';
+import { config } from '@shushu.pro/rollup-config';
 import external from './external.prod';
 
 export default config({
-  env: {
-    mode: 'production',
+  preset: 'client',
+  input: './src/index.ts',
+  plugins: {
+    // terser: false,
   },
-  input: 'src/index.ts',
+
   output: {
-    cjs: {
-      file: 'dist/index.cjs.js',
-      exports: 'named',
-      // sourcemap: true,
-    },
-    es: {
-      file: 'dist/index.es.js',
-      format: 'es',
-      //   sourcemap: true,
-    },
+    cjs: { exports: 'named' },
     umd: {
-      file: 'dist/index.umd.js',
-      format: 'umd',
-      name: 'libName',
+      name: 'easyapi',
       exports: 'named',
       globals: {
         axios: 'axiosLib',
@@ -29,6 +20,5 @@ export default config({
       //   sourcemap: true,
     },
   },
-  extensions: ['.js', '.ts'],
   external,
 });

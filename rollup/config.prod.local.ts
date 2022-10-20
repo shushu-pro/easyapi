@@ -1,18 +1,17 @@
-import config from './core';
+import { config } from '@shushu.pro/rollup-config';
 import external from './external.prod';
 
 export default config({
-  env: {
-    mode: 'production',
+  preset: 'es',
+  input: './src/index.ts',
+  plugins: {
+    // terser: false,
   },
-  input: 'src/index.ts',
   output: {
     es: {
-      file: 'easyapi-local/index.js',
-      format: 'es',
-      sourcemap: true,
+      exports: 'named',
+      file: './dist-local/index.js',
     },
   },
-  extensions: ['.js', '.ts'],
   external,
 });

@@ -1,4 +1,4 @@
-import { AxiosResponse } from 'axios';
+import { AxiosRequestConfig, AxiosResponse } from 'axios';
 import { merge } from 'lodash';
 
 import {
@@ -43,7 +43,7 @@ export default class Context<
   readonly easyapi: Runtime<GExtendApiConfig, GExtendEasyapiOption>['easyapi'];
 
   /** @description 获取axios的配置项 */
-  get axiosConfig() {
+  get axiosConfig(): AxiosRequestConfig {
     const config = {
       ...this.axios,
       url: this.url,
@@ -64,6 +64,14 @@ export default class Context<
 
     if (config.data && Object.keys(config.data).length === 0) {
       config.data = null;
+    }
+
+    if (
+      String(this.axios.headers['Content-Type']).includes(
+        'application/x-www-form-urlencoded'
+      )
+    ) {
+      config.data = this.payload || this.body;
     }
 
     return config;

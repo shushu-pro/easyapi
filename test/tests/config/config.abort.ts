@@ -7,6 +7,10 @@ tests('config.abort', (test, assert, { easyapi }) => {
         mode: 'development',
         errorIgnore: true,
         config: {},
+        axios: {
+          // abort无法中止服务器，固此处直接设置超时
+          timeout: 1000,
+        },
       },
       999
     );
