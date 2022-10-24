@@ -7,7 +7,6 @@ export default config({
   plugins: {
     // terser: false,
   },
-
   output: {
     cjs: { exports: 'named' },
     umd: {
@@ -15,7 +14,7 @@ export default config({
       exports: 'named',
       globals: {
         axios: 'axiosLib',
-        lodash: 'lodash',
+        lodash: '_',
       },
       //   sourcemap: true,
     },

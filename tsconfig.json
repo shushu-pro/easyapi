@@ -2,7 +2,7 @@
 {
   "include": ["./src", "./rollup", "./playground", "./template", "./test"],
   "compilerOptions": {
-    "types": ["node", "reflect-metadata"],
+    "types": ["node"],
     "baseUrl": "./",
     "paths": {
       "@/*": ["./src/*"],
