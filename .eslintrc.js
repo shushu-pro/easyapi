@@ -31,9 +31,9 @@ module.exports = {
     // 允许方法重载
     'no-dupe-class-members': 'off',
 
-    'simple-import-sort/imports': 'off',
+    // 'simple-import-sort/imports': 'error',
     // 'simple-import-sort/exports': 'error',
-    'import/first': 'off',
+    // 'import/first': 'off',
     // 'import/newline-after-import': 'error',
     // 'import/no-duplicates': 'error',
   },
@@ -60,7 +60,7 @@ module.exports = {
   },
   overrides: [
     {
-      files: ['webpack/**/*', 'rollup/**/*'],
+      files: ['webpack/**/*', 'build/**/*', './template/**/*'],
       rules: {
         'import/no-extraneous-dependencies': 'off',
         'import/no-dynamic-require': 'off',

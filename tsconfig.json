@@ -1,17 +1,13 @@
 /// ts项目配置文件
 {
-  "include": ["./src", "./rollup", "./playground", "./template", "./test"],
+  "include": ["./src", "./rollup", "./demo", "./template", "./test"],
   "compilerOptions": {
     "types": ["node"],
     "baseUrl": "./",
     "paths": {
-      "@/*": ["./src/*"],
-      "@dev/easyapi": ["./src/index"],
-      "@dev/easyapi/*": ["./src/*"],
-      "@ijest": ["./test/index"],
-      "@shushu.pro/easyapi": ["./src/index"],
-      "@api": ["./template/index"],
-      "@api/*": ["./template/*"]
+      "@ijest": ["./test"],
+      "@shushu.pro/easyapi": ["./src"],
+      "@api": ["./template"]
     },
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,

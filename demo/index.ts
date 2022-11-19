@@ -27,7 +27,7 @@ document.getElementById('cache').onclick = () => {
 };
 
 document.getElementById('abort').onclick = () => {
-  const abort = api.abort();
+  const abort = api.createAbort();
 
   api
     .request({

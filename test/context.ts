@@ -1,8 +1,7 @@
+import type { DefineApiConfig, EasyapiOption } from '@shushu.pro/easyapi';
+import easyapi, { createAbort } from '@shushu.pro/easyapi';
 import http from 'http';
 import qs from 'qs';
-
-import easyapi from '@dev/easyapi';
-import type { DefineApiConfig, EasyapiOption } from '@dev/easyapi/index';
 
 // import type { EasyapiResult } from '../src/index.types';
 import { ErrorIgnoreName } from '../src/const';
@@ -33,6 +32,7 @@ const server = http.createServer((req, res) => {
 
 export default {
   easyapi: ieasyapi,
+  createAbort,
   http: {
     start,
     close,
@@ -72,5 +72,3 @@ function ieasyapi(
 
   return { test, define };
 }
-
-ieasyapi.abort = easyapi.abort;

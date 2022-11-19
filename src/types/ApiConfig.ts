@@ -67,7 +67,7 @@ type PresetApiConfig<
       GPayload,
       GResponseData
     >
-  ) => Record<string, string>;
+  ) => MockData<Record<string, string>>;
 
   /** @description mock响应数据，仅在开发模式下生效 */
   mockData?: (
@@ -77,7 +77,7 @@ type PresetApiConfig<
       GPayload,
       GResponseData
     >
-  ) => GResponseData;
+  ) => MockData<GResponseData>;
 
   /** @description mockBody数据，仅在开发模式下生效 */
   mockBody?: (
@@ -87,7 +87,7 @@ type PresetApiConfig<
       GPayload,
       GResponseData
     >
-  ) => ResponseBody<GResponseData>;
+  ) => MockData<ResponseBody<GResponseData>>;
 };
 
 /** @description 响应的数据 */
@@ -194,3 +194,11 @@ export type ContextApiConfig<
     GPayload,
     GResponseData
   >;
+
+type MockData<Data> =
+  | Data
+  | Promise<Data>
+  | Promise<{
+      __esModule: boolean;
+      default: Data;
+    }>;

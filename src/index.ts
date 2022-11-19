@@ -15,11 +15,9 @@ function easyapi<GExtendApiConfig, GExtendEasyapiOption = unknown>(
   };
 }
 
-easyapi.abort = abort;
-
 const { CancelToken } = axios;
 
-function abort() {
+function createAbort() {
   const source = CancelToken.source();
   return {
     cancelToken: source.token,
@@ -33,6 +31,7 @@ const version = '0.1.18';
 
 export default easyapi;
 export { easyapi };
+export { createAbort };
 export { Easyapi, version };
 export { ErrorIgnoreName } from './const';
 export { default as Context } from './Context';

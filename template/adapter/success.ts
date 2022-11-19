@@ -1,6 +1,6 @@
 import adapter from '@shushu.pro/adapter';
 
-import { Context } from '@api/types';
+import { Context } from '../types';
 
 /** @description 转化响应的业务数据bizData */
 export default function success(ctx: Context) {

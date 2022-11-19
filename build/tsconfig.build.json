@@ -1,0 +1,9 @@
+/// tsnode调用rollup-config配置
+{
+  "include": ["../src"],
+  "compilerOptions": {
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "target": "ES5"
+  }
+}

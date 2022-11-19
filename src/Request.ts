@@ -5,6 +5,7 @@ import { merge } from 'lodash';
 import Cache from './Cache';
 import { ErrorIgnoreName } from './const';
 import Context from './Context';
+import { esModule } from './helper';
 import { DefineApiConfig } from './types/ApiConfig';
 import { RequestOption } from './types/RequestOption';
 import { Runtime } from './types/Runtime';
@@ -87,9 +88,9 @@ export default class Request<
     const promiseResult = new Promise((resolve, reject) => {
       let body = null;
       if (mockBody) {
-        body = mockBody(ctx);
+        body = esModule(mockBody(ctx));
       } else if (mockData) {
-        body = Promise.resolve(mockData(ctx)).then((data) => ({
+        body = Promise.resolve(esModule(mockData(ctx))).then((data) => ({
           code: 0,
           message: null,
           data,
@@ -98,7 +99,7 @@ export default class Request<
 
       Promise.all([
         // mockHeaders
-        Promise.resolve(mockHeaders?.(ctx) || {}),
+        Promise.resolve(esModule(mockHeaders?.(ctx)) || {}),
         // mockBody
         Promise.resolve(body),
       ])

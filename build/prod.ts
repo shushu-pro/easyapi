@@ -1,12 +1,8 @@
 import { config } from '@shushu.pro/rollup-config';
-import external from './external.prod';
 
 export default config({
   preset: 'client',
   input: './src/index.ts',
-  plugins: {
-    // terser: false,
-  },
   output: {
     cjs: { exports: 'named' },
     umd: {
@@ -19,5 +15,8 @@ export default config({
       //   sourcemap: true,
     },
   },
-  external,
+  plugins: {
+    terser: false,
+  },
+  external: ['axios', 'lodash'],
 });

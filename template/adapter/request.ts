@@ -1,6 +1,6 @@
-import adapter from '@shushu.pro/adapter';
+import adapter from  '@shushu.pro/adapter';
 
-import { Context } from '@api/types';
+import { Context } from '../types';
 
 /** @description 转化请求payload */
 export default function request(ctx: Context) {

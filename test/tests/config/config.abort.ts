@@ -1,6 +1,6 @@
 import tests from '@ijest';
 
-tests('config.abort', (test, assert, { easyapi }) => {
+tests('config.abort', (test, assert, { easyapi, createAbort }) => {
   test('config.abort.cancelToken', () => {
     const api = easyapi(
       {
@@ -15,7 +15,7 @@ tests('config.abort', (test, assert, { easyapi }) => {
       999
     );
 
-    const abort = easyapi.abort();
+    const abort = createAbort();
 
     setTimeout(() => {
       abort.dispatch('取消请求');

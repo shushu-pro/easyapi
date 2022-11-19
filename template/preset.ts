@@ -1,7 +1,9 @@
-import easyapi, {
+import {
+  createAbort,
   DefineApiConfig,
   RequestApiConfig,
 } from '@shushu.pro/easyapi';
+
 import { define } from './config';
 import { ExtendApiConfig, ExtendEasyapiOption } from './types';
 
@@ -18,6 +20,4 @@ export function request<GPayload = any, GData = any>(
   });
 }
 
-export const { abort } = easyapi;
-
-export { define };
+export { createAbort, define };

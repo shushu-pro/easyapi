@@ -68,4 +68,129 @@ tests('config.mock', (test, assert, { easyapi }) => {
         assert.isBe(err.message, 'xx');
       });
   });
+
+  test('config.mock.mockHeader.promise', () => {
+    const mockHeader = {
+      name: '张三',
+      age: '12',
+    };
+    const mockHeaderPromise = Promise.resolve(mockHeader);
+    const api = easyapi({
+      mode: 'development',
+      config: {
+        mockHeaders: () => mockHeaderPromise,
+      },
+      dataFormat: (ctx) => ctx.responseObject,
+    });
+    return api.test().then((responseObject) => {
+      assert.isEqual(responseObject.headers, mockHeader);
+    });
+  });
+
+  test('config.mock.mockBody.promise', () => {
+    const mockBody = {
+      code: 0,
+      message: 'xx',
+      data: {
+        name: '张三',
+        age: '12',
+      },
+    };
+    const mockBodyPromise = Promise.resolve(mockBody);
+    const api = easyapi({
+      mode: 'development',
+      config: {
+        mockBody: () => mockBodyPromise,
+      },
+      dataFormat: (ctx) => ctx.responseObject,
+    });
+    return api.test().then((responseObject) => {
+      assert.isEqual(responseObject.data, mockBody);
+    });
+  });
+
+  test('config.mock.mockData.promise', () => {
+    const mockData = {
+      name: '张三',
+      age: '12',
+    };
+    const mockDataPromise = Promise.resolve(mockData);
+    const api = easyapi({
+      mode: 'development',
+      config: {
+        mockData: () => mockDataPromise,
+      },
+      dataFormat: (ctx) => ctx.responseObject,
+    });
+    return api.test().then((responseObject) => {
+      assert.isEqual(responseObject.data.data, mockData);
+    });
+  });
+
+  test('config.mock.mockHeader.promise.esModule', () => {
+    const mockHeader = {
+      __esModule: true,
+      default: {
+        name: '张三',
+        age: '12',
+      },
+    };
+    const mockHeaderPromise = Promise.resolve(mockHeader);
+    const api = easyapi({
+      mode: 'development',
+      config: {
+        mockHeaders: () => mockHeaderPromise,
+      },
+      dataFormat: (ctx) => ctx.responseObject,
+    });
+    return api.test().then((responseObject) => {
+      assert.isEqual(responseObject.headers, mockHeader.default);
+    });
+  });
+
+  test('config.mock.mockBody.promise.esModule', () => {
+    const mockBody = {
+      __esModule: true,
+      default: {
+        code: 0,
+        message: 'xx',
+        data: {
+          name: '张三',
+          age: '12',
+        },
+      },
+    };
+    const mockBodyPromise = Promise.resolve(mockBody);
+    const api = easyapi({
+      mode: 'development',
+      config: {
+        mockBody: () => mockBodyPromise,
+      },
+      dataFormat: (ctx) => ctx.responseObject,
+    });
+    return api.test().then((responseObject) => {
+      assert.isEqual(responseObject.data, mockBody.default);
+    });
+  });
+
+  test('config.mock.mockData.promise.esModule', () => {
+    const mockData = {
+      __esModule: true,
+      default: {
+        name: '张三',
+        age: '12',
+      },
+    };
+    const mockDataPromise = Promise.resolve(mockData);
+    const api = easyapi({
+      mode: 'development',
+      config: {
+        mockData: () => mockDataPromise,
+      },
+      dataFormat: (ctx) => ctx.responseObject,
+    });
+    return api.test().then((responseObject) => {
+      assert.isEqual(responseObject.data.data, mockData.default);
+    });
+  });
 });
