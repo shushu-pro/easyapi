@@ -1,17 +1,12 @@
-import { DefineApiConfig } from './ApiConfig';
+import { DefineConfig } from './config';
 import { Runtime } from './Runtime';
 
 export interface RequestOption<
-  GExtendApiConfig = unknown,
-  GExtendEasyapiOption = unknown,
-  GPayload = any,
-  GResponseData = any
+  GExtendConfig = unknown,
+  GExtendMeta = unknown,
+  GPayload = unknown,
+  GBizData = unknown,
 > {
-  runtime: Runtime<GExtendApiConfig, GExtendEasyapiOption>;
-  config: DefineApiConfig<
-    GExtendApiConfig,
-    GExtendEasyapiOption,
-    GPayload,
-    GResponseData
-  >;
+  runtime: Runtime<GExtendConfig, GExtendMeta>;
+  config: DefineConfig<GExtendConfig, GExtendMeta, GPayload, GBizData>;
 }

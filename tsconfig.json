@@ -1,23 +1,20 @@
-/// ts项目配置文件
 {
-  "include": ["./src", "./rollup", "./demo", "./template", "./test"],
+  "include": ["./src", "./demo", "./template", "./test"],
   "compilerOptions": {
-    "types": ["node"],
     "baseUrl": "./",
     "paths": {
-      "@ijest": ["./test"],
       "@shushu.pro/easyapi": ["./src"],
       "@api": ["./template"]
     },
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
+    "types": ["node"],
     "module": "ESNext",
-    "target": "ESNext",
+    "target": "ES5",
     "moduleResolution": "Node",
-    "jsx": "react",
     "allowSyntheticDefaultImports": true,
     "isolatedModules": true,
     "skipLibCheck": true,
-    "esModuleInterop": true
+    "skipDefaultLibCheck": true,
+    "esModuleInterop": true,
+    "importHelpers": true
   }
 }

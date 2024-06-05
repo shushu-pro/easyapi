@@ -1,26 +1,22 @@
+import { GlobalConfig } from './config';
 import { Runtime } from './Runtime';
 
-/** @description 组件配置项 */
+/**
+ * @description 组件配置项
+ */
 export type EasyapiOption<
-  GExtendApiConfig,
-  GExtendEasyapiOption = Record<string, unknown>
+  GExtendConfig,
+  GExtendMeta = Record<string, unknown>,
 > = {
-  /** @description 运行环境 */
+  /**
+   * @description 运行环境
+   */
   mode?: 'development' | 'production';
 } & Partial<
   unknown &
     Pick<
-      Runtime<GExtendApiConfig, GExtendEasyapiOption>,
-      'request' | 'response' | 'success' | 'failure' | 'mockForce' | 'easyapi'
+      Runtime<GExtendConfig, GExtendMeta>,
+      'request' | 'response' | 'success' | 'failure' | 'meta'
     > &
-    Pick<
-      Runtime<GExtendApiConfig, GExtendEasyapiOption>['defaultConfig'],
-      | 'axios'
-      | 'cache'
-      | 'delay'
-      | 'errorIgnore'
-      | 'logger'
-      | 'mockOff'
-      | 'dataFormat'
-    >
+    GlobalConfig<GExtendConfig, GExtendMeta>
 >;

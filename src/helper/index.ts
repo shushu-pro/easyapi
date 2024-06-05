@@ -1,1 +1,1 @@
-export { default as esModule } from './esModule';
+export * from './esModule';

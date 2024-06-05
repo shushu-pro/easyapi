@@ -1,9 +1,13 @@
 import easyapi from '@shushu.pro/easyapi';
-import Cookies from 'js-cookie';
-import adapter from './adapter';
-import { ExtendApiConfig, ExtendEasyapiOption } from './types';
+// import Cookies from 'js-cookie';
 
-const { define } = easyapi<ExtendApiConfig, ExtendEasyapiOption>({
+import adapter from './adapter';
+import { ExtendConfig, ExtendMeta } from './types';
+
+export const { define, request, createAbort } = easyapi<
+  ExtendConfig,
+  ExtendMeta
+>({
   mode: 'development',
   axios: {
     baseURL: '.',
@@ -12,10 +16,7 @@ const { define } = easyapi<ExtendApiConfig, ExtendEasyapiOption>({
   delay: 300,
   mockForce: true,
 
-  // 对响应的数据做处理
-  dataFormat(ctx) {
-    return ctx.responseObject?.data?.data;
-  },
+  resolveType: 'data',
 
   // 请求拦截器
   request(ctx) {
@@ -31,10 +32,10 @@ const { define } = easyapi<ExtendApiConfig, ExtendEasyapiOption>({
     // }
 
     // 加认证状态token
-    const csrfToken = Cookies.get('token');
-    if (csrfToken) {
-      ctx.setHeader('x-csrf-token', csrfToken);
-    }
+    // const csrfToken = Cookies.get('token');
+    // if (csrfToken) {
+    //   ctx.setHeader('x-csrf-token', csrfToken);
+    // }
 
     // 请求前置拦截器,主要用于不同接口满足不同的处理需求
     config.beforeRequest?.(ctx);
@@ -63,7 +64,7 @@ const { define } = easyapi<ExtendApiConfig, ExtendEasyapiOption>({
 
     // 其他错误
     if (code !== 200 && code !== 0) {
-      throw Error(data.message || (data as any).msg);
+      throw Error(data.message || data.msg);
     }
   },
 
@@ -88,7 +89,9 @@ const { define } = easyapi<ExtendApiConfig, ExtendEasyapiOption>({
     const responseData = responseObject?.data;
 
     // 将数据信息挂到error的data属性下
-    error.data = responseData?.data;
+    // error.data = responseData?.data;
+
+    ctx.setError(error, responseData?.data);
 
     // 阻止默认的错误处理
     if (config.showError === false) {
@@ -105,5 +108,3 @@ const { define } = easyapi<ExtendApiConfig, ExtendEasyapiOption>({
     }
   },
 });
-
-export { define };

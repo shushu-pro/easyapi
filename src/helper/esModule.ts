@@ -1,6 +1,6 @@
 /// 包装获取esModule中的default
 
-export default function esModule(data) {
+export function esModule(data) {
   if (!(data instanceof Promise)) {
     // eslint-disable-next-line no-underscore-dangle
     if (data?.__esModule) {

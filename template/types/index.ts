@@ -1,3 +1,3 @@
 export * from './Context';
-export * from './ExtendApiConfig';
-export * from './ExtendEasyapiOption';
+export * from './ExtendConfig';
+export * from './ExtendMeta';

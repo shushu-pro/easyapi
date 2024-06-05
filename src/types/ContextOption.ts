@@ -1,24 +1,19 @@
-import { DefineApiConfig, RequestApiConfig } from './ApiConfig';
+import { DefineConfig, InstanceConfig } from './config';
 import { Runtime } from './Runtime';
 
 export type ContextOption<
-  GExtendApiConfig = unknown,
-  GExtendEasyapiOption = unknown,
-  GPayload = any,
-  GResponseData = any
+  GExtendConfig = unknown,
+  GExtendMeta = unknown,
+  GPayload = unknown,
+  GBizData = unknown,
 > = {
   payload: GPayload;
-  defineConfig: DefineApiConfig<
-    GExtendApiConfig,
-    GExtendEasyapiOption,
+  defineConfig: DefineConfig<GExtendConfig, GExtendMeta, GPayload, GBizData>;
+  instanceConfig: InstanceConfig<
+    GExtendConfig,
+    GExtendMeta,
     GPayload,
-    GResponseData
+    GBizData
   >;
-  requestConfig: RequestApiConfig<
-    GExtendApiConfig,
-    GExtendEasyapiOption,
-    GPayload,
-    GResponseData
-  >;
-  runtime: Runtime<GExtendApiConfig, GExtendEasyapiOption>;
+  runtime: Runtime<GExtendConfig, GExtendMeta>;
 };

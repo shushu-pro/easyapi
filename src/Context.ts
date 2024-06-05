@@ -1,46 +1,77 @@
-import { AxiosRequestConfig, AxiosResponse } from 'axios';
-import { merge } from 'lodash';
+import { AxiosRequestConfig } from 'axios';
+import merge from 'lodash.merge';
 
+import { ResponseError } from './ResponseError';
 import {
-  ContextApiConfig,
-  DefineApiConfig,
-  ResponseBody,
-} from './types/ApiConfig';
-import { ContextOption } from './types/ContextOption';
-import { Runtime } from './types/Runtime';
+  BaseConfig,
+  CompositeConfig,
+  ContextOption,
+  ResponseObject,
+  Runtime,
+} from './types';
 
-export default class Context<
-  GExtendApiConfig,
-  GExtendEasyapiOption = unknown,
-  GPayload = any,
-  GResponseData = any
+export class Context<
+  GExtendConfig,
+  GExtendMeta = unknown,
+  GPayload = unknown,
+  GBizData = unknown,
 > {
-  url: DefineApiConfig['url'];
+  url: BaseConfig['url'];
 
+  /**
+   * @description 接口请求参数，根据method决定查询的类型，get|option将赋值给query，其他赋值给body
+   */
   payload: GPayload;
 
-  query: Record<string, string>;
+  /**
+   * @description 接口请求query参数
+   */
+  query: BaseConfig['query'];
 
-  params: Record<string, string>;
+  /**
+   * @description 接口请求url路径参数
+   */
+  params: BaseConfig['params'];
 
-  body: Record<string, any>;
+  /**
+   * @description 接口请求body
+   */
+  data: BaseConfig['data'];
 
-  error: Error & { data?: AxiosResponse<ResponseBody<GResponseData>> };
+  /**
+   * @description 接口响应的错误
+   */
+  error: ResponseError<GBizData> | null;
 
-  responseObject: AxiosResponse<ResponseBody<GResponseData>>;
+  /**
+   *  @description 接口响应的对象
+   */
+  responseObject: ResponseObject<GBizData> | null;
 
-  readonly config: ContextApiConfig<
-    GExtendApiConfig,
-    GExtendEasyapiOption,
+  /**
+   *  @description 合成的接口配置项
+   */
+  readonly config: CompositeConfig<
+    GExtendConfig,
+    GExtendMeta,
     GPayload,
-    GResponseData
+    GBizData
   >;
 
-  readonly axios: ContextApiConfig['axios'];
+  /**
+   * @description 配置元数据
+   */
+  readonly meta: GExtendMeta;
 
-  readonly runtime: Runtime<GExtendApiConfig, GExtendEasyapiOption>;
+  /**
+   * @description axios请求配置选项
+   */
+  readonly axios: AxiosRequestConfig;
 
-  readonly easyapi: Runtime<GExtendApiConfig, GExtendEasyapiOption>['easyapi'];
+  /**
+   * @description 运行环境变量
+   */
+  readonly runtime: Runtime<GExtendConfig, GExtendMeta>;
 
   /** @description 获取axios的配置项 */
   get axiosConfig(): AxiosRequestConfig {
@@ -50,29 +81,39 @@ export default class Context<
     };
 
     // payload为请求数据，根据请求方式设置对应的参数
-    if (this.payload) {
-      // 以下几种请求类型，payload为data
-      if (/^(POST|PUT|PATCH)$/i.test(this.axios.method)) {
-        config.data = merge({}, this.payload, this.body || {});
-      } else {
+    const { payload } = this;
+    if (payload) {
+      if (/^(get|option)$/i.test((this.axios.method as string) || 'get')) {
         config.params = merge({}, this.payload, this.query || {});
       }
+      // FormData
+      else if (typeof FormData === 'object' && payload instanceof FormData) {
+        config.data = payload;
+      }
+      // payload为 key-value对象，与data进行合并
+      else if (typeof payload === 'object' && !Array.isArray(payload)) {
+        config.data = merge({}, this.payload, this.data || {});
+      }
+      // 数组，字符串
+      else {
+        config.data = this.payload;
+      }
     } else {
-      config.data = this.body;
+      config.data = this.data;
       config.params = this.query;
     }
 
-    if (config.data && Object.keys(config.data).length === 0) {
-      config.data = null;
-    }
+    // if (config.data && Object.keys(config.data).length === 0) {
+    //   config.data = null;
+    // }
 
-    if (
-      String(this.axios.headers['Content-Type']).includes(
-        'application/x-www-form-urlencoded'
-      )
-    ) {
-      config.data = this.payload || this.body;
-    }
+    // if (
+    //   String(this.axios.headers['Content-Type']).includes(
+    //     'application/x-www-form-urlencoded'
+    //   )
+    // ) {
+    //   config.data = this.payload || this.data;
+    // }
 
     return config;
   }
@@ -80,28 +121,23 @@ export default class Context<
   constructor({
     runtime,
     defineConfig,
-    requestConfig,
+    instanceConfig,
     payload,
-  }: ContextOption<
-    GExtendApiConfig,
-    GExtendEasyapiOption,
-    GPayload,
-    GResponseData
-  >) {
+  }: ContextOption<GExtendConfig, GExtendMeta, GPayload, GBizData>) {
     this.url = defineConfig.url;
     this.payload = payload;
     this.runtime = runtime;
-    this.query = requestConfig.query ?? null;
-    this.body = requestConfig.data ?? null;
-    this.params = requestConfig.params ?? null;
+    this.query = instanceConfig.query;
+    this.data = instanceConfig.data;
+    this.params = instanceConfig.params;
     this.responseObject = null;
     this.error = null;
-    this.easyapi = runtime.easyapi;
+    this.meta = runtime.meta;
     this.config = merge(
       {},
-      runtime.defaultConfig,
+      runtime.globalConfig,
       defineConfig,
-      requestConfig,
+      instanceConfig,
       {
         axios: {
           headers: defineConfig.headers,
@@ -111,27 +147,40 @@ export default class Context<
       },
       {
         axios: {
-          headers: requestConfig.headers,
-          timeout: requestConfig.timeout,
+          headers: instanceConfig.headers,
+          timeout: instanceConfig.timeout,
         },
       }
     );
     this.axios = this.config.axios;
-    // this.setAbort = requestConfig.setAbort;
   }
 
-  /** @description 设置请求头 */
+  /**
+   * @description 设置请求头
+   */
   setHeader(key: string, value: string) {
     this.axios.headers[key] = value;
   }
 
-  /** @description 请求前会进行一些转化工作 */
-  beforeRequest() {
-    this.convertRESTful();
-    // this.initAbortConfig();
+  setError(err: string | Error, data?) {
+    this.error = new ResponseError(err, data);
   }
 
-  /** @description 转化restful */
+  throwError(err: string | Error, data?) {
+    this.setError(err, data);
+    throw this.error;
+  }
+
+  /**
+   * @description 请求前进行一些转化工作
+   */
+  beforeRequest() {
+    this.convertRESTful();
+  }
+
+  /**
+   * @description 转化restful
+   */
   private convertRESTful() {
     const { payload, params, url } = this;
     const RESTFulParams = params || payload;
@@ -149,7 +198,7 @@ export default class Context<
     const MatchedParams = usePayload && {};
 
     const urlSplits = url.split('?');
-    let baseUrl = urlSplits.shift();
+    let baseUrl = urlSplits.shift() as string;
     const queryString = urlSplits.join('?');
 
     // /api/:param1/:param2
@@ -175,7 +224,7 @@ export default class Context<
     ) {
       const nextPayload = {};
 
-      Object.keys(payload).forEach((key) => {
+      Object.keys(payload as object).forEach((key) => {
         if (!MatchedParams[key]) {
           nextPayload[key] = payload[key];
         }
@@ -186,15 +235,4 @@ export default class Context<
 
     this.url = baseUrl + (queryString ? `?${queryString}` : '');
   }
-
-  // /** @description 设置取消请求的钩子 */
-  // private initAbortConfig() {
-  //   if (this.setAbort) {
-  //     const source = CancelToken.source();
-
-  //     this.axios.cancelToken = source.token;
-
-  //     this.setAbort((message) => source.cancel(message));
-  //   }
-  // }
 }

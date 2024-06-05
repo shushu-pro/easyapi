@@ -5,6 +5,7 @@ document.body.innerHTML = `
     <button id="cache">测试缓存</button>
     <button id="abort">取消请求</button>
     <button id="adapter">测试适配器</button>
+    <button id="failure">测试failure</button>
   </div>
 `;
 
@@ -33,11 +34,11 @@ document.getElementById('abort').onclick = () => {
     .request({
       url: 'xxx',
       axios: {
-        cancelToken: abort.cancelToken,
+        cancelToken: abort.token,
       },
     })
     .catch((err) => {
-      console.info(err.message === '取消请求');
+      console.info(err.message.includes('取消请求'));
     });
 
   abort.dispatch('取消请求');
@@ -56,4 +57,20 @@ document.getElementById('adapter').onclick = () => {
       isECS: Boolean,
     },
   });
+};
+
+document.getElementById('failure').onclick = () => {
+  api
+    .request({
+      url: 'xlxx',
+      payload: {
+        isECS: 1,
+      },
+      mockData() {
+        return null;
+      },
+    })
+    .catch((err) => {
+      console.info(err);
+    });
 };

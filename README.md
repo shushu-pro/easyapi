@@ -33,13 +33,13 @@
 
 ### 设置拦截器
 
-```tsx
+```ts
 import easyapi from '@shushu.pro/easyapi';
 import Cookies from 'js-cookie';
 import adapter from './adapter';
-import { ExtendApiConfig, ExtendEasyapiOption } from './types';
+import { ExtendConfig, ExtendMeta } from './types';
 
-const { define } = easyapi<ExtendApiConfig, ExtendEasyapiOption>({
+const { define } = easyapi<ExtendConfig, ExtendMeta>({
   mode: 'development',
   axios: {
     baseURL: '.',
@@ -48,9 +48,19 @@ const { define } = easyapi<ExtendApiConfig, ExtendEasyapiOption>({
   delay: 300,
   mockForce: true,
 
-  // 对响应的数据做处理
-  dataFormat(ctx) {
-    return ctx.responseObject?.data?.data;
+  // 设置then返回的数据为data字段，假如需要返回完整的数据，请使用fully
+  resolveType: 'data',
+
+  // 对响应的数据做处理，对resData和msg字段转成标准化的data和message
+  dataNormalizer(ctx) {
+    const original = ctx.responseObject?.data;
+    if (original) {
+      ctx.responseObject.data = {
+        code: original.code,
+        data: original.resData,
+        message: original.msg,
+      };
+    }
   },
 
   // 请求拦截器
@@ -122,9 +132,6 @@ const { define } = easyapi<ExtendApiConfig, ExtendEasyapiOption>({
   failure(ctx) {
     const { error, config, responseObject } = ctx;
     const responseData = responseObject?.data;
-
-    // 将数据信息挂到error的data属性下
-    error.data = responseData?.data;
 
     // 阻止默认的错误处理
     if (config.showError === false) {
