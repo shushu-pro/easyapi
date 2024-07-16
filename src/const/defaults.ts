@@ -22,10 +22,6 @@ const GlobalDefaults: Pick<
 
   logger: false,
 
-  mockOff: false,
-
-  mockForce: false,
-
   resolveType: 'data',
 };
 
